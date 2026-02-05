@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { normalizeOffers } from "../../shared/normalize";
+import { normalizeOffers } from "../../shared/normalize.js";
 
 type SearchBody = {
   origin: string;
