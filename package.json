@@ -1,0 +1,8 @@
+{
+  "name": "ujui-amadeus-flights-vercel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"skip build (Vercel will bundle api/*)\""
+  }
+}
