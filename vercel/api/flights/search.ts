@@ -3,13 +3,13 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { normalizeOffers } from "../../shared/normalize.js";
 
 type SearchBody = {
-  origin: string;        // can be IATA or city keyword
-  destination: string;   // can be IATA or city keyword
+  origin: string;        // can be IATA (DEL) or city text (Delhi)
+  destination: string;   // can be IATA (LON) or city text (London)
   departDate: string;    // YYYY-MM-DD
   returnDate?: string;   // YYYY-MM-DD
   adults?: number;
   travelClass?: "ECONOMY" | "PREMIUM_ECONOMY" | "BUSINESS" | "FIRST";
-  maxStops?: null | 0 | 1 | 2;
+  max?: number;          // max offers
 };
 
 const BASE_URL = process.env.AMADEUS_BASE_URL || "https://test.api.amadeus.com";
@@ -17,10 +17,6 @@ const CLIENT_ID = process.env.AMADEUS_CLIENT_ID || "";
 const CLIENT_SECRET = process.env.AMADEUS_CLIENT_SECRET || "";
 
 let tokenCache: { access_token: string; expires_at: number } | null = null;
-
-function isIata(s: string): boolean {
-  return /^[A-Z]{3}$/.test((s || "").toUpperCase().trim());
-}
 
 async function getAccessToken(): Promise<string> {
   const now = Date.now();
@@ -45,120 +41,107 @@ async function getAccessToken(): Promise<string> {
     throw new Error(`Token error: ${res.status}\n${await res.text()}`);
   }
 
-  const json: any = await res.json();
+  const json = (await res.json()) as any;
   const expiresIn = Number(json.expires_in || 900);
-  tokenCache = { access_token: String(json.access_token), expires_at: now + expiresIn * 1000 };
+  tokenCache = {
+    access_token: String(json.access_token),
+    expires_at: now + expiresIn * 1000,
+  };
   return tokenCache.access_token;
 }
 
-async function resolveToIata(input: string): Promise<string> {
-  const raw = (input || "").trim();
-  const up = raw.toUpperCase();
-  if (isIata(up)) return up;
+function looksLikeIata(s: string): boolean {
+  return /^[A-Z]{3}$/.test(s);
+}
 
-  // Use Amadeus "Airport & City Search" to resolve keyword -> IATA
-  // Prefer CITY if available, else first result.
+async function resolveToIata(keyword: string): Promise<string> {
+  // If user typed a city name, use Amadeus Locations API to find best IATA code.
   const token = await getAccessToken();
-  const keyword = raw.slice(0, 40);
 
-  if (keyword.length < 2) return up; // too short to resolve; let downstream error handle
+  const url = new URL(`${BASE_URL}/v1/reference-data/locations`);
+  url.searchParams.set("keyword", keyword);
+  url.searchParams.set("subType", "CITY,AIRPORT");
+  url.searchParams.set("page[limit]", "1");
+  url.searchParams.set("view", "LIGHT");
 
-  const url =
-    `${BASE_URL}/v1/reference-data/locations` +
-    `?keyword=${encodeURIComponent(keyword)}` +
-    `&subType=CITY,AIRPORT` +
-    `&view=LIGHT`;
-
-  const res = await fetch(url, {
+  const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) {
-    // If resolve fails, return original; flight search will likely fail and show useful error
-    return up;
+    throw new Error(`Location resolve error: ${res.status}\n${await res.text()}`);
   }
 
-  const json: any = await res.json();
-  const list: any[] = json?.data ?? [];
-  if (!list.length) return up;
-
-  const city = list.find((x) => x?.subType === "CITY" && x?.iataCode);
-  const pick = city || list.find((x) => x?.iataCode) || list[0];
-  return String(pick?.iataCode || up).toUpperCase();
-}
-
-function isFutureDate(yyyy_mm_dd: string): boolean {
-  // treat today as allowed? Amadeus often requires >= today in local; safer: >= tomorrow
-  const d = new Date(`${yyyy_mm_dd}T00:00:00Z`);
-  if (Number.isNaN(d.getTime())) return false;
-  const now = new Date();
-  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  return d.getTime() >= todayUTC.getTime();
+  const json = (await res.json()) as any;
+  const code = json?.data?.[0]?.iataCode;
+  if (!code) throw new Error(`No IATA match for "${keyword}"`);
+  return String(code).toUpperCase();
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const body = (req.body || {}) as Partial<SearchBody>;
+    const body = (req.body || {}) as SearchBody;
 
-    let origin = String(body.origin || "").trim();
-    let destination = String(body.destination || "").trim();
+    const originRaw = String(body.origin || "").trim();
+    const destRaw = String(body.destination || "").trim();
     const departDate = String(body.departDate || "").trim();
-    const returnDate = body.returnDate ? String(body.returnDate).trim() : undefined;
 
-    if (!origin || !destination || !departDate) {
+    if (!originRaw || !destRaw || !departDate) {
       return res.status(400).json({ error: "origin, destination, departDate are required" });
     }
-    if (!isFutureDate(departDate)) {
-      return res.status(400).json({ error: "departDate must be today or in the future" });
-    }
-
-    // Allow city keywords; resolve them to IATA
-    origin = await resolveToIata(origin);
-    destination = await resolveToIata(destination);
 
     const adults = Math.max(1, Math.min(9, Number(body.adults || 1)));
-    const travelClass = (body.travelClass || "ECONOMY") as SearchBody["travelClass"];
-    const maxStops = body.maxStops ?? null;
+    const travelClass = (body.travelClass || "ECONOMY").toString();
+    const max = Math.max(1, Math.min(50, Number(body.max || 50)));
+
+    // Accept IATA codes OR city names
+    const origin = looksLikeIata(originRaw.toUpperCase())
+      ? originRaw.toUpperCase()
+      : await resolveToIata(originRaw);
+
+    const destination = looksLikeIata(destRaw.toUpperCase())
+      ? destRaw.toUpperCase()
+      : await resolveToIata(destRaw);
 
     const token = await getAccessToken();
 
-    const params = new URLSearchParams();
-    params.set("originLocationCode", origin);
-    params.set("destinationLocationCode", destination);
-    params.set("departureDate", departDate);
-    params.set("adults", String(adults));
-    params.set("travelClass", travelClass);
-    params.set("max", "50");
-    if (returnDate) params.set("returnDate", returnDate);
-    if (maxStops !== null && maxStops !== undefined) {
-      params.set("maxNumberOfStops", String(maxStops));
-    }
+    const url = new URL(`${BASE_URL}/v2/shopping/flight-offers`);
+    url.searchParams.set("originLocationCode", origin);
+    url.searchParams.set("destinationLocationCode", destination);
+    url.searchParams.set("departureDate", departDate);
+    url.searchParams.set("adults", String(adults));
+    url.searchParams.set("travelClass", travelClass);
+    url.searchParams.set("max", String(max));
 
-    const url = `${BASE_URL}/v2/shopping/flight-offers?${params.toString()}`;
-    const apiRes = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+    if (body.returnDate) url.searchParams.set("returnDate", String(body.returnDate).trim());
+
+    const upstream = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
     });
 
-    const jsonText = await apiRes.text();
+    const jsonText = await upstream.text();
     let json: any = null;
     try {
       json = JSON.parse(jsonText);
     } catch {
-      json = { error: jsonText };
+      // keep raw text
     }
 
-    if (!apiRes.ok) {
-      return res.status(apiRes.status).json({ error: JSON.stringify(json) });
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({
+        error: typeof json === "object" && json ? JSON.stringify(json) : jsonText,
+      });
     }
 
     const offers = normalizeOffers(json);
-
     return res.status(200).json({
+      query: { origin, destination, departDate, adults, travelClass, max },
       offers,
-      resolved: { origin, destination },
-      rawMeta: json?.meta,
     });
   } catch (e: any) {
     return res.status(500).json({ error: String(e?.message || e) });
