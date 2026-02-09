@@ -1,80 +1,72 @@
-type AmadeusResponse = any;
-
-export type NormalizedOffer = {
+// vercel/shared/normalize.ts
+export type UiOffer = {
   id: string;
-  carriers: string[];
-  price: { total: number; currency: string };
-  itineraries: Array<{
-    duration: string;
-    segments: Array<{
-      departure: { iataCode: string; at: string };
-      arrival: { iataCode: string; at: string };
-      carrierCode: string;
-      numberOfStops?: number;
-    }>;
-  }>;
-  metrics: {
-    totalMinutes: number;
-    totalStops: number;
-    stopIatas: string[];
-  };
-  meta: {
-    rankIndex: number;
-    dealsCount?: number;
-  };
+  airline: string;
+  from: string;
+  to: string;
+  departAt: string;
+  arriveAt: string;
+  duration: string;
+  stops: number;
+  price: number;
+  currency: string;
 };
 
-function parseISODurationToMinutes(dur: string): number {
-  const m = /PT(?:(\d+)H)?(?:(\d+)M)?/.exec(dur || "");
-  if (!m) return 0;
-  const h = Number(m[1] || 0);
-  const mm = Number(m[2] || 0);
-  return h * 60 + mm;
+function isoDurationToHuman(iso: string): string {
+  // e.g. "PT11H35M"
+  if (!iso || typeof iso !== "string") return "";
+  const m = /^PT(?:(\d+)H)?(?:(\d+)M)?/.exec(iso);
+  if (!m) return iso;
+  const h = m[1] ? Number(m[1]) : 0;
+  const min = m[2] ? Number(m[2]) : 0;
+  const parts: string[] = [];
+  if (h) parts.push(`${h}h`);
+  if (min || !parts.length) parts.push(`${min}m`);
+  return parts.join(" ");
 }
 
-export function normalizeOffers(api: AmadeusResponse): { offers: NormalizedOffer[]; meta: any } {
-  const dictCarriers: Record<string, string> = api?.dictionaries?.carriers || {};
-  const offersRaw: any[] = Array.isArray(api?.data) ? api.data : [];
-  const currency = offersRaw?.[0]?.price?.currency || "USD";
+export function normalizeOffers(payload: any): UiOffer[] {
+  const data: any[] = payload?.data ?? [];
+  const carriers: Record<string, string> = payload?.dictionaries?.carriers ?? {};
 
-  const offers: NormalizedOffer[] = offersRaw.map((o, idx) => {
-    const itins = (o.itineraries || []).map((it: any) => {
-      const segs = (it.segments || []).map((s: any) => ({
-        departure: { iataCode: s.departure?.iataCode, at: s.departure?.at },
-        arrival: { iataCode: s.arrival?.iataCode, at: s.arrival?.at },
-        carrierCode: s.carrierCode,
-        numberOfStops: s.numberOfStops,
-      }));
-      return { duration: it.duration, segments: segs };
-    });
+  return data.map((offer: any, idx: number) => {
+    const it0 = offer?.itineraries?.[0];
+    const segs: any[] = it0?.segments ?? [];
+    const first = segs[0];
+    const last = segs[segs.length - 1];
 
-    const carrierCodes = new Set<string>();
-    itins.forEach(it => it.segments.forEach(s => carrierCodes.add(s.carrierCode)));
-    const carriers = Array.from(carrierCodes).map(c => dictCarriers[c] ? String(dictCarriers[c]) : c);
+    const carrierCode =
+      first?.carrierCode ||
+      first?.operating?.carrierCode ||
+      segs?.[0]?.carrierCode ||
+      "";
 
-    let totalStops = 0;
-    const stopIatas: string[] = [];
-    itins.forEach(it => {
-      const stops = Math.max(0, (it.segments?.length || 0) - 1);
-      totalStops += stops;
-      for (let i = 0; i < it.segments.length - 1; i++) {
-        const stop = it.segments[i]?.arrival?.iataCode;
-        if (stop) stopIatas.push(stop);
-      }
-    });
+    const airline = carriers[carrierCode] || carrierCode || "Unknown";
 
-    const totalMinutes = itins.reduce((acc, it) => acc + parseISODurationToMinutes(it.duration), 0);
-    const total = Number(o?.price?.total || 0);
+    const from = first?.departure?.iataCode || "";
+    const to = last?.arrival?.iataCode || "";
+    const departAt = first?.departure?.at || "";
+    const arriveAt = last?.arrival?.at || "";
+
+    const duration = isoDurationToHuman(it0?.duration || "");
+    const stops = Math.max(0, segs.length - 1);
+
+    const currency = offer?.price?.currency || "";
+    const price = Number(offer?.price?.total || 0);
 
     return {
-      id: String(o.id || `${idx}`),
-      carriers: carriers.length ? carriers : ["Airline"],
-      price: { total, currency: String(o?.price?.currency || currency) },
-      itineraries: itins,
-      metrics: { totalMinutes, totalStops, stopIatas },
-      meta: { rankIndex: idx },
+      id: String(offer?.id ?? idx),
+      airline,
+      from,
+      to,
+      departAt,
+      arriveAt,
+      duration,
+      stops,
+      price,
+      currency,
     };
   });
-
-  return { offers, meta: { count: offers.length, warnings: api?.warnings || [], source: "amadeus" } };
 }
+
+export default normalizeOffers;
