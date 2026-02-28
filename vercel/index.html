@@ -7,7 +7,7 @@
   <style>
     :root{--bg:#f6f8fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--brand:#0f7283;}
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
     .topbar{position:sticky;top:0;z-index:5;background:var(--brand);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px}
     .topbar .title{display:flex;flex-direction:column;line-height:1.1;margin-right:auto}
     .topbar .title b{font-size:16px}
@@ -15,16 +15,15 @@
     .pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 10px;position:relative}
     .pill label{font-size:12px;opacity:.9}
     .pill input{border:0;outline:0;background:transparent;color:#fff;font-weight:600;width:180px}
-    .pill input::placeholder{color:rgba(255,255,255,.75);font-weight:500}
     .pill.small input{width:110px}
     .pill.date input{width:140px}
     .suggest{position:absolute;left:0;right:0;top:42px;background:#fff;color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(2,8,23,.12);padding:6px;display:none;max-height:280px;overflow:auto}
-    .suggest button{width:100%;text-align:left;border:0;background:transparent;padding:10px 10px;border-radius:10px;cursor:pointer}
+    .suggest button{width:100%;text-align:left;border:0;background:transparent;padding:10px;border-radius:10px;cursor:pointer}
     .suggest button:hover{background:var(--bg)}
     .btn{border:0;cursor:pointer;border-radius:999px;padding:10px 16px;font-weight:700}
     .btn.primary{background:#fff;color:var(--brand)}
     .wrap{display:grid;grid-template-columns:280px 1fr;gap:18px;padding:18px;max-width:1200px;margin:0 auto}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 24px rgba(2,8,23,.04)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px}
     .side{padding:16px}
     .side h3{margin:0 0 10px 0;font-size:14px}
     .radio{display:flex;flex-direction:column;gap:8px;font-size:14px}
@@ -36,36 +35,22 @@
     .offer{display:grid;grid-template-columns:1fr 140px 88px;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fff}
     .offerTitle{font-weight:800}
     .offerSub{color:var(--muted);font-size:13px;margin-top:2px}
-    .badge{display:inline-flex;align-items:center;border:1px solid var(--line);padding:4px 10px;border-radius:999px;font-size:12px;margin-top:6px;background:var(--bg)}
+    .badge{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:12px;background:var(--bg)}
     .price{justify-self:end;text-align:right}
     .price b{font-size:18px}
     .price span{display:block;color:var(--muted);font-size:12px}
     .select{justify-self:end}
     .empty{padding:18px;color:var(--muted);text-align:center}
     .err{margin-top:8px;color:#b91c1c;font-size:12px;white-space:pre-wrap}
-    @media (max-width:900px){.wrap{grid-template-columns:1fr}.pill input{width:140px}.offer{grid-template-columns:1fr}.price,.select{justify-self:start}}
+    @media (max-width:900px){.wrap{grid-template-columns:1fr}.pill input{width:140px}.offer{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="title">
-      <b id="routeTitle">DEL → LON</b>
-      <span>1 adult · Economy</span>
-    </div>
-    <div class="pill">
-      <label>From</label>
-      <input id="origin" placeholder="City or IATA" autocomplete="off" />
-      <div id="originSuggest" class="suggest"></div>
-    </div>
-    <div class="pill">
-      <label>To</label>
-      <input id="dest" placeholder="City or IATA" autocomplete="off" />
-      <div id="destSuggest" class="suggest"></div>
-    </div>
-    <div class="pill date small">
-      <label>Date</label>
-      <input id="depart" type="date" />
-    </div>
+    <div class="title"><b id="routeTitle">DEL → LON</b><span>1 adult · Economy</span></div>
+    <div class="pill"><label>From</label><input id="origin" placeholder="City or IATA" autocomplete="off" /><div id="originSuggest" class="suggest"></div></div>
+    <div class="pill"><label>To</label><input id="dest" placeholder="City or IATA" autocomplete="off" /><div id="destSuggest" class="suggest"></div></div>
+    <div class="pill date small"><label>Date</label><input id="depart" type="date" /></div>
     <button id="runSearch" class="btn primary">Search</button>
   </div>
   <div class="wrap">
@@ -75,311 +60,216 @@
         <label><input type="radio" name="stops" value="any" checked /> Any</label>
         <label><input type="radio" name="stops" value="0" /> Direct</label>
         <label><input type="radio" name="stops" value="1" /> 1 stop max</label>
-        <label><input type="radio" name="stops" value="2" /> 2+ stops</label>
       </div>
-      <div style="height:14px"></div>
-      <h3>Sort by</h3>
-      <select id="sortBy" style="width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;font-weight:700">
+      <h3 style="margin-top:14px">Sort by</h3>
+      <select id="sortBy" style="width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff">
         <option value="cheapest">Cheapest first</option>
         <option value="fastest">Fastest</option>
       </select>
-      <div class="muted" style="margin-top:10px">Additional bag fees may apply</div>
     </div>
     <div class="card main">
-      <div class="headerRow">
-        <b id="summary">0 results · sorted by Cheapest</b>
-      </div>
+      <div class="headerRow"><b id="summary">0 results</b></div>
       <div id="error" class="err" style="display:none"></div>
       <div id="list" class="list"></div>
-      <div id="empty" class="empty" style="display:none">No results for current filters.</div>
+      <div id="empty" class="empty" style="display:none">No results</div>
     </div>
   </div>
 <script>
-(function(){
-  const $ = (id) => document.getElementById(id);
+var originEl, destEl, departEl, originSuggest, destSuggest;
+var state = { offers: [], rawOffers: [], stopsFilter: "any", sortBy: "cheapest" };
 
-  const state = {
-    offers: [],
-    rawOffers: [],
-    lastQuery: { originCode: "DEL", destCode: "LON", departDate: null },
-    stopsFilter: "any",
-    sortBy: "cheapest"
-  };
+function init() {
+  originEl = document.getElementById("origin");
+  destEl = document.getElementById("dest");
+  departEl = document.getElementById("depart");
+  originSuggest = document.getElementById("originSuggest");
+  destSuggest = document.getElementById("destSuggest");
+  
+  var today = new Date();
+  today.setDate(today.getDate() + 14);
+  departEl.value = today.toISOString().slice(0,10);
+  
+  bindControls();
+  bindSelect();
+}
 
-  const originEl = origin;
-  const destEl = dest;
-  const departEl = depart;
-  const originSuggest = originSuggest;
-  const destSuggest = destSuggest;
+function fmtTime(iso) {
+  if (!iso) return "—";
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+}
 
-  function fmtDate(d) {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return yyyy + "-" + mm + "-" + dd;
+function money(cur, amt) {
+  if (amt == null || !isFinite(amt)) return (cur||"EUR") + " —";
+  return (cur||"EUR") + " " + Math.round(amt).toLocaleString();
+}
+
+function stopsText(n) {
+  if (n === 0) return "Direct";
+  if (n === 1) return "1 stop";
+  return n + " stops";
+}
+
+function getFirstItin(o) { return (o.itineraries||[])[0] || { segments: [] }; }
+
+function computeMetrics(o) {
+  var itin = getFirstItin(o);
+  var segs = itin.segments || [];
+  var stops = typeof o.stops === "number" ? o.stops : Math.max(0, segs.length - 1);
+  var dep = o.departureAt || (segs[0] && segs[0].departureAt);
+  var arr = o.arrivalAt || (segs[segs.length-1] && segs[segs.length-1].arrivalAt);
+  return { stops: stops, dep: dep, arr: arr };
+}
+
+function render() {
+  var list = document.getElementById("list");
+  list.innerHTML = "";
+  document.getElementById("error").style.display = "none";
+  
+  var items = state.rawOffers.slice();
+  if (state.stopsFilter !== "any") {
+    var maxS = Number(state.stopsFilter);
+    items = items.filter(function(o) { return computeMetrics(o).stops <= maxS; });
   }
-
-  function ensureFutureDate(days) {
-    if (days === void 0) days = 14;
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    return fmtDate(d);
+  
+  if (state.sortBy === "cheapest") {
+    items.sort(function(a,b) { return (a.price?.total||1e12) - (b.price?.total||1e12); });
   }
-
-  departEl.value = ensureFutureDate(14);
-
-  function formatTime(iso) {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  
+  document.getElementById("summary").textContent = items.length + " results";
+  state.offers = items;
+  
+  if (items.length === 0) {
+    document.getElementById("empty").style.display = "block";
+    return;
   }
-
-  function parseISODurationToMin(s) {
-    if (!s || typeof s !== "string") return null;
-    const m = s.match(/^PT(?:(\d+)H)?(?:(\d+)M)?/);
-    if (!m) return null;
-    return Number(m[1] || 0) * 60 + Number(m[2] || 0);
+  document.getElementById("empty").style.display = "none";
+  
+  for (var i = 0; i < items.length; i++) {
+    var o = items[i];
+    var m = computeMetrics(o);
+    var itin = getFirstItin(o);
+    var segs = itin.segments || [];
+    var from = segs[0] ? (segs[0].fromCode || segs[0].from || (segs[0].departure && segs[0].departure.iataCode)) : "—";
+    var to = segs[segs.length-1] ? (segs[segs.length-1].toCode || segs[segs.length-1].to || (segs[segs.length-1].arrival && segs[segs.length-1].arrival.iataCode)) : "—";
+    var airline = (o.carriers && o.carriers[0] && o.carriers[0].name) ? o.carriers[0].name : (o.carriers && o.carriers[0] && o.carriers[0].code) || "Airline";
+    
+    var el = document.createElement("div");
+    el.className = "offer";
+    el.innerHTML = '<div><div class="offerTitle">' + airline + '</div><div class="offerSub">' + (from||"—") + ' → ' + (to||"—") + '</div><div class="offerSub">' + fmtTime(m.dep) + ' → ' + fmtTime(m.arr) + ' · ' + stopsText(m.stops) + '</div><div class="badge">' + (o.travelClass||"ECONOMY") + '</div></div><div class="price"><b>' + money(o.price?.currency, o.price?.total) + '</b><span>' + (itin.duration||"") + '</span></div><div class="select"><button class="btn" data-id="' + o.id + '">Select</button></div>';
+    list.appendChild(el);
   }
+}
 
-  function money(currency, amount) {
-    if (amount == null || !Number.isFinite(amount)) return (currency || "EUR") + " —";
-    return (currency || "EUR") + " " + Math.round(amount).toLocaleString();
+function setError(msg) {
+  var e = document.getElementById("error");
+  e.style.display = "block";
+  e.textContent = msg;
+}
+
+async function doSearch() {
+  var origin = (originEl.value || "").trim();
+  var dest = (destEl.value || "").trim();
+  var date = departEl.value;
+  
+  if (!origin || !dest || !date) {
+    setError("Please fill in all fields");
+    return;
   }
-
-  function stopsText(n) {
-    if (n === 0) return "Direct";
-    if (n === 1) return "1 stop";
-    return n + " stops";
-  }
-
-  function segFrom(s) {
-    return (s && (s.fromCode || s.fromLabel || s.fromName || s.from || (s.departure && s.departure.iataCode))) || "";
-  }
-
-  function segTo(s) {
-    return (s && (s.toCode || s.toLabel || s.toName || s.to || (s.arrival && s.arrival.iataCode))) || "";
-  }
-
-  function segCarrierCode(s) {
-    return (s && (s.carrierCode || s.marketingCarrierCode || s.carrier)) || "";
-  }
-
-  function segFlightNumber(s) {
-    if (s && s.flightNumber) return s.flightNumber;
-    const c = segCarrierCode(s);
-    const n = (s && (s.number || s.flight || s.flightNo)) || "";
-    return (c && n) ? c + n : (c || n || "");
-  }
-
-  function getFirstItinerary(offer) {
-    return (offer.itineraries || [])[0] || { segments: [] };
-  }
-
-  function pickPrimaryCarrier(offer) {
-    const c = (offer.carriers || [])[0];
-    if (!c) return "Airline";
-    return c.name || c.code || "Airline";
-  }
-
-  function unique(arr) {
-    return [...new Set(arr)];
-  }
-
-  function computeMetrics(offer) {
-    const itin = getFirstItinerary(offer);
-    const mins = parseISODurationToMin(itin.duration);
-    const segs = itin.segments || [];
-    const stops = typeof offer.stops === "number" ? offer.stops : Math.max(0, segs.length - 1);
-    const dep = offer.departureAt || (segs[0] && segs[0].departureAt);
-    const arr = offer.arrivalAt || (segs[segs.length - 1] && segs[segs.length - 1].arrivalAt);
-    const flightNums = segs.map(function(s) { return s.flightNumber || (s.carrierCode && s.number ? s.carrierCode + s.number : null); }).filter(Boolean);
-    const carriers = [];
-    for (const s of segs) {
-      const c = s.carrierName || s.carrierCode;
-      if (c && !carriers.includes(c)) carriers.push(c);
-    }
-    const layovers = segs.slice(0, -1).map(function(s) { return segTo(s); }).filter(Boolean);
-    return { mins: mins ?? null, stops: stops, dep: dep, arr: arr, flightNums: flightNums, carriers: carriers, layovers: layovers };
-  }
-
-  function applyFilters() {
-    const f = state.stopsFilter;
-    let items = state.rawOffers.slice();
-    items = items.filter(function(o) {
-      const m = computeMetrics(o);
-      if (f === "any") return true;
-      if (f === "0") return m.stops === 0;
-      if (f === "1") return m.stops <= 1;
-      if (f === "2") return m.stops >= 2;
-      return true;
-    });
-    const sortBy = state.sortBy;
-    items.sort(function(a, b) {
-      const ma = computeMetrics(a), mb = computeMetrics(b);
-      if (sortBy === "fastest") return (ma.mins ?? 1e9) - (mb.mins ?? 1e9);
-      const pa = a.price?.total ?? 1e12, pb = b.price?.total ?? 1e12;
-      return pa - pb;
-    });
-    state.offers = items;
-  }
-
-  function render() {
-    applyFilters();
-    const list = list;
-    list.innerHTML = "";
-    error.style.display = "none";
-    const sortLabel = state.sortBy === "fastest" ? "Fastest" : "Cheapest";
-    summary.textContent = state.offers.length + " results · sorted by " + sortLabel;
-    if (state.offers.length === 0) {
-      empty.style.display = "block";
-      return;
-    }
-    empty.style.display = "none";
-    for (const o of state.offers) {
-      const m = computeMetrics(o);
-      const itin = getFirstItinerary(o);
-      const segs = itin.segments || [];
-      const primary = pickPrimaryCarrier(o);
-      const from = o.route?.from || segFrom(segs[0]);
-      const to = o.route?.to || segTo(segs[segs.length - 1]);
-      const flightNums = unique(segs.map(function(s) { return segFlightNumber(s); }).filter(Boolean));
-      const flightNumsLabel = flightNums.join(" / ");
-      const via = segs.slice(1).map(function(s) { return segFrom(s); }).filter(Boolean).join(", ");
-      const travelClass = (o.travelClass || "ECONOMY").toUpperCase();
-      const el = document.createElement("div");
-      el.className = "offer";
-      el.innerHTML = '<div><div class="offerTitle">' + primary + ' · ' + (from || "—") + ' → ' + (to || "—") + '</div><div class="offerSub">' + formatTime(m.dep) + ' → ' + formatTime(m.arr) + ' · ' + stopsText(m.stops) + (via ? ' · via ' + via : "") + '</div>' + (flightNums ? '<div class="offerSub">Flight: ' + flightNumsLabel + '</div>' : "") + '<div class="badge">' + travelClass + '</div></div><div class="price"><b>' + money(o.price?.currency || "EUR", o.price?.total) + '</b><span>' + (itin.duration ? "Duration " + itin.duration.replace("PT", "").replace("H", "h ").replace("M", "m") : "") + '</span></div><div class="select"><button class="btn" style="background:var(--bg);border:1px solid var(--line);padding:10px 14px" data-id="' + o.id + '">Select</button></div>';
-      list.appendChild(el);
-    }
-  }
-
-  function setError(msg) {
-    const e = error;
-    e.style.display = "block";
-    e.textContent = msg;
-  }
-
-  function getCodeFromInput(el) {
-    const v = (el.value || "").trim();
-    if (!v) return "";
-    if (/^[A-Z]{3}$/i.test(v)) return v.toUpperCase();
-    return v;
-  }
-
-  async function apiSearchFlights() {
-    const originCode = getCodeFromInput(originEl);
-    const destCode = getCodeFromInput(destEl);
-    const departDate = departEl.value;
-    state.lastQuery = { originCode: originCode, destCode: destCode, departDate: departDate };
-    routeTitle.textContent = (originCode || "—") + " → " + (destCode || "—");
-    const stopsVal = state.stopsFilter;
-    const maxStops = stopsVal === "any" ? null : Number(stopsVal);
-    const body = { origin: originCode, destination: destCode, departDate: departDate, adults: 1, travelClass: "ECONOMY", maxStops: maxStops };
-    const res = await fetch("/api/flights/search", {
+  
+  document.getElementById("routeTitle").textContent = origin + " → " + dest;
+  document.getElementById("error").style.display = "none";
+  document.getElementById("list").innerHTML = "Loading...";
+  
+  try {
+    var body = { origin: origin, destination: dest, departDate: date, adults: 1, travelClass: "ECONOMY" };
+    var res = await fetch("/api/flights/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
-    const json = await res.json().catch(function() { return { error: "Invalid JSON response" }; });
-    if (!res.ok) throw new Error(json?.error || JSON.stringify(json));
-    return json?.offers || [];
+    var json = await res.json();
+    if (!res.ok) throw new Error(json?.error || "Search failed");
+    state.rawOffers = json?.offers || [];
+    render();
+  } catch (err) {
+    setError(err.message);
   }
+}
 
-  function bindSelect() {
-    list.addEventListener("click", function(e) {
-      const btn = e.target.closest("button[data-id]");
-      if (!btn) return;
-      const id = btn.getAttribute("data-id");
-      const o = state.offers.find(function(x) { return String(x.id) === String(id); });
-      if (!o) return;
-      const itin2 = getFirstItinerary(o);
-      const segs2 = itin2.segments || [];
-      const lines = segs2.map(function(s) {
-        const num = s.flightNumber ? " " + s.flightNumber : "";
-        return (s.from || "—") + " " + formatTime(s.departureAt) + " → " + (s.to || "—") + " " + formatTime(s.arrivalAt) + num;
-      }).join("\n");
-      const from2 = o.route?.from || segFrom(segs2[0]) || "—";
-      const to2 = o.route?.to || segTo(segs2[segs2.length - 1]) || "—";
-      const carrierName2 = (o.carriers && o.carriers[0] && (o.carriers[0].name || o.carriers[0].code)) ? (o.carriers[0].name || o.carriers[0].code) : pickPrimaryCarrier(o);
-      const flightNums2 = unique(segs2.map(function(s) { return segFlightNumber(s); }).filter(Boolean));
-      const flightsLine2 = flightNums2.length ? ("Flights: " + flightNums2.join(", ")) : "";
-      alert("Selected offer:\n" + carrierName2 + " • " + from2 + " → " + to2 + "\n" + money(o.price?.currency || "EUR", o.price?.total) + "\n" + flightsLine2 + "\n\n" + lines + "\n\n(Phase 2: Price + checkout)");
-    });
-  }
-
-  function bindControls() {
-    stopsGroup.addEventListener("change", function(e) {
-      if (e.target.name === "stops") {
-        state.stopsFilter = e.target.value;
-        render();
-      }
-    });
-    sortBy.addEventListener("change", function(e) {
-      state.sortBy = e.target.value;
-      render();
-    });
-    runSearch.addEventListener("click", async function() {
-      error.style.display = "none";
-      list.innerHTML = "";
-      empty.style.display = "none";
-      try {
-        const offers = await apiSearchFlights();
-        state.rawOffers = offers;
-        render();
-      } catch (err) {
-        setError(err.message);
-      }
-    });
-
-    function setupSuggest(input, suggest, onSelect) {
-      let timeout = null;
-      input.addEventListener("input", function() {
-        clearTimeout(timeout);
-        const q = (input.value || "").trim();
-        if (q.length < 2) {
-          suggest.style.display = "none";
-          return;
-        }
-        timeout = setTimeout(async function() {
-          try {
-            const res = await fetch("/api/locations/search?keyword=" + encodeURIComponent(q));
-            const data = await res.json();
-            if (!Array.isArray(data) || data.length === 0) {
-              suggest.style.display = "none";
-              return;
-            }
-            suggest.innerHTML = "";
-            for (const item of data) {
-              const btn = document.createElement("button");
-              btn.textContent = item.name + " (" + item.iataCode + ") - " + (item.type || "");
-              btn.addEventListener("click", function() {
-                input.value = item.iataCode;
-                suggest.style.display = "none";
-                if (onSelect) onSelect(item);
-              });
-              suggest.appendChild(btn);
-            }
-            suggest.style.display = "block";
-          } catch (e) {
-            suggest.style.display = "none";
+function bindControls() {
+  document.getElementById("stopsGroup").addEventListener("change", function(e) {
+    if (e.target.name === "stops") { state.stopsFilter = e.target.value; render(); }
+  });
+  document.getElementById("sortBy").addEventListener("change", function(e) {
+    state.sortBy = e.target.value; render();
+  });
+  document.getElementById("runSearch").addEventListener("click", doSearch);
+  
+  // Simple suggest for origin
+  var timeout;
+  originEl.addEventListener("input", function() {
+    clearTimeout(timeout);
+    var q = (originEl.value || "").trim();
+    if (q.length < 2) { originSuggest.style.display = "none"; return; }
+    timeout = setTimeout(function() {
+      fetch("/api/locations/search?keyword=" + encodeURIComponent(q))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!Array.isArray(data) || data.length === 0) { originSuggest.style.display = "none"; return; }
+          originSuggest.innerHTML = "";
+          for (var i = 0; i < data.length; i++) {
+            var btn = document.createElement("button");
+            btn.textContent = data[i].name + " (" + data[i].iataCode + ")";
+            btn.onclick = function() { originEl.value = data[i].iataCode; originSuggest.style.display = "none"; };
+            originSuggest.appendChild(btn);
           }
-        }, 300);
-      });
-      document.addEventListener("click", function(e) {
-        if (!suggest.contains(e.target) && e.target !== input) {
-          suggest.style.display = "none";
-        }
-      });
-    }
+          originSuggest.style.display = "block";
+        });
+    }, 300);
+  });
+  
+  // Simple suggest for dest
+  destEl.addEventListener("input", function() {
+    clearTimeout(timeout);
+    var q = (destEl.value || "").trim();
+    if (q.length < 2) { destSuggest.style.display = "none"; return; }
+    timeout = setTimeout(function() {
+      fetch("/api/locations/search?keyword=" + encodeURIComponent(q))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!Array.isArray(data) || data.length === 0) { destSuggest.style.display = "none"; return; }
+          destSuggest.innerHTML = "";
+          for (var i = 0; i < data.length; i++) {
+            var btn = document.createElement("button");
+            btn.textContent = data[i].name + " (" + data[i].iataCode + ")";
+            btn.onclick = function() { destEl.value = data[i].iataCode; destSuggest.style.display = "none"; };
+            destSuggest.appendChild(btn);
+          }
+          destSuggest.style.display = "block";
+        });
+    }, 300);
+  });
+}
 
-    setupSuggest(originEl, originSuggest);
-    setupSuggest(destEl, destSuggest);
-  }
+function bindSelect() {
+  document.getElementById("list").addEventListener("click", function(e) {
+    var btn = e.target.closest("button[data-id]");
+    if (!btn) return;
+    var id = btn.getAttribute("data-id");
+    var o = state.offers.find(function(x) { return String(x.id) === String(id); });
+    if (!o) return;
+    alert("Selected: " + (o.carriers?.[0]?.name||"Airline") + " - " + money(o.price?.currency, o.price?.total));
+  });
+}
 
-  bindSelect();
-  bindControls();
-})();
+// Start when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>
