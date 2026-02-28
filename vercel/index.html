@@ -51,7 +51,6 @@
       .offer{grid-template-columns:1fr}
       .price,.select{justify-self:start}
     }
-  
   .offer-meta{font-size:12px;color:#6b7280;margin-top:6px;}
 </style>
 </head>
@@ -61,27 +60,22 @@
       <b id="routeTitle">DEL → LON</b>
       <span>1 adult · Economy</span>
     </div>
-
     <div class="pill">
       <label>From</label>
       <input id="origin" placeholder="City or IATA" autocomplete="off" />
       <div id="originSuggest" class="suggest"></div>
     </div>
-
     <div class="pill">
       <label>To</label>
       <input id="dest" placeholder="City or IATA" autocomplete="off" />
       <div id="destSuggest" class="suggest"></div>
     </div>
-
     <div class="pill date small">
       <label>Date</label>
       <input id="depart" type="date" />
     </div>
-
     <button id="runSearch" class="btn primary">Search</button>
   </div>
-
   <div class="wrap">
     <div class="card side">
       <h3>Stops</h3>
@@ -91,7 +85,6 @@
         <label><input type="radio" name="stops" value="1" /> 1 stop max</label>
         <label><input type="radio" name="stops" value="2" /> 2+ stops</label>
       </div>
-
       <div style="height:14px"></div>
       <h3>Sort by</h3>
       <select id="sortBy" style="width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;font-weight:700">
@@ -100,407 +93,152 @@
       </select>
       <div class="muted" style="margin-top:10px">Additional bag fees may apply</div>
     </div>
-
     <div class="card main">
       <div class="headerRow">
         <b id="summary">0 results · sorted by Cheapest</b>
         <a href="#" id="wholeMonth">Show whole month</a>
       </div>
-
       <div id="error" class="err" style="display:none"></div>
       <div id="list" class="list"></div>
       <div id="empty" class="empty" style="display:none">No results for current filters.</div>
     </div>
   </div>
-
 <script>
 (function(){
   const $ = (id)=>document.getElementById(id);
-
-  const state = {
-    offers: [],
-    rawOffers: [],
-    lastQuery: { originCode:"DEL", destCode:"LON", departDate:null },
-    stopsFilter: "any",
-    sortBy: "cheapest"
-  };
-
-  const originEl = $("origin");
-  const destEl = $("dest");
-  const departEl = $("depart");
-  const originSuggest = $("originSuggest");
-  const destSuggest = $("destSuggest");
-
-  function fmtDate(d){
-    const yyyy=d.getFullYear();
-    const mm=String(d.getMonth()+1).padStart(2,"0");
-    const dd=String(d.getDate()).padStart(2,"0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  function ensureFutureDate(days=14){
-    const d=new Date();
-    d.setDate(d.getDate()+days);
-    return fmtDate(d);
-  }
-
+  const state = { offers: [], rawOffers: [], lastQuery: { originCode:"DEL", destCode:"LON", departDate:null }, stopsFilter: "any", sortBy: "cheapest" };
+  const originEl = origin, destEl = dest, departEl = depart, originSuggest = originSuggest, destSuggest = destSuggest;
+  function fmtDate(d){ const yyyy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,"0"), dd=String(d.getDate()).padStart(2,"0"); return yyyy+"-"+mm+"-"+dd; }
+  function ensureFutureDate(days=14){ const d=new Date(); d.setDate(d.getDate()+days); return fmtDate(d); }
   departEl.value = ensureFutureDate(14);
-
-  function formatTime(iso){
-    if(!iso) return "—";
-    const d = new Date(iso);
-    if(Number.isNaN(d.getTime())) return "—";
-    const hh=String(d.getHours()).padStart(2,"0");
-    const mm=String(d.getMinutes()).padStart(2,"0");
-    return `${hh}:${mm}`;
-  }
-
-  function parseISODurationToMin(s){
-    if(!s || typeof s!=="string") return null;
-    // PT#H#M
-    const m=s.match(/^PT(?:(\d+)H)?(?:(\d+)M)?/);
-    if(!m) return null;
-    const h=Number(m[1]||0), min=Number(m[2]||0);
-    return h*60+min;
-  }
-
-  function money(currency, amount){
-    if(amount==null || !Number.isFinite(amount)) return `${currency} —`;
-    return `${currency} ${Math.round(amount).toLocaleString()}`;
-  }
-
-  function stopsText(n){
-    if(n===0) return "Direct";
-    if(n===1) return "1 stop";
-    return `${n} stops`;
-  }
-
-  function pickPrimaryCarrier(offer){
-    const c = (offer.carriers||[])[0];
-    if(!c) return "Airline";
-    return c.name || c.code || "Airline";
-  }
-
-  function getFirstItinerary(offer){
-    return (offer.itineraries||[])[0] || { segments: [] };
-  }
-
-  function segFrom(s){
-    return (s && (s.fromCode || s.fromLabel || s.fromName || s.from || (s.departure && s.departure.iataCode))) || "";
-  }
-  function segTo(s){
-    return (s && (s.toCode || s.toLabel || s.toName || s.to || (s.arrival && s.arrival.iataCode))) || "";
-  }
-  function segCarrierCode(s){
-    return (s && (s.carrierCode || s.marketingCarrierCode || s.carrier)) || "";
-  }
-  function segFlightNumber(s){
-    if (s && s.flightNumber) return s.flightNumber;
-    const c = segCarrierCode(s);
-    const n = (s && (s.number || s.flight || s.flightNo)) || "";
-    return (c && n) ? `${c}${n}` : (c || n || "");
-  }
-
-
+  function formatTime(iso){ if(!iso) return "—"; const d = new Date(iso); if(Number.isNaN(d.getTime())) return "—"; return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+  function parseISODurationToMin(s){ if(!s||typeof s!=="string") return null; const m=s.match(/^PT(?:(\d+)H)?(?:(\d+)M)?/); if(!m) return null; return Number(m[1]||0)*60+Number(m[2]||0); }
+  function money(currency, amount){ if(amount==null||!Number.isFinite(amount)) return (currency||"EUR")+" —"; return (currency||"EUR")+" "+Math.round(amount).toLocaleString(); }
+  function stopsText(n){ if(n===0) return "Direct"; if(n===1) return "1 stop"; return n+" stops"; }
+  function segFrom(s){ return (s && (s.fromCode || s.fromLabel || s.fromName || s.from || (s.departure && s.departure.iataCode))) || ""; }
+  function segTo(s){ return (s && (s.toCode || s.toLabel || s.toName || s.to || (s.arrival && s.arrival.iataCode))) || ""; }
+  function segCarrierCode(s){ return (s && (s.carrierCode || s.marketingCarrierCode || s.carrier)) || ""; }
+  function segFlightNumber(s){ if(s&&s.flightNumber) return s.flightNumber; const c=segCarrierCode(s), n=(s&&(s.number||s.flight||s.flightNo))||""; return (c&&n)?c+n:(c||n||""); }
+  function getFirstItinerary(offer){ return (offer.itineraries||[])[0] || { segments: [] }; }
+  function pickPrimaryCarrier(offer){ const c=(offer.carriers||[])[0]; if(!c) return "Airline"; return c.name||c.code||"Airline"; }
+  function unique(arr){ return [...new Set(arr)]; }
   function computeMetrics(offer){
-    const it = getFirstItinerary(offer);
-    const mins = parseISODurationToMin(it.duration);
-    const segs = it.segments || [];
-    const stops = typeof offer.stops === "number" ? offer.stops : Math.max(0, segs.length - 1);
-
-    const dep = offer.departureAt || segs[0]?.departureAt;
-    const arr = offer.arrivalAt || segs[segs.length-1]?.arrivalAt;
-
-    const flightNums = segs
-      .map(s => s.flightNumber || (s.carrierCode && s.number ? `${s.carrierCode}${s.number}` : null))
-      .filter(Boolean);
-
-    const carriers = [];
-    for (const s of segs){
-      const c = s.carrierName || s.carrierCode;
-      if (c && !carriers.includes(c)) carriers.push(c);
-    }
-
-    const layovers = segs.slice(0, -1).map(s => segTo(s)).filter(Boolean);
-
-    return { mins: mins ?? null, stops, dep, arr, flightNums, carriers, layovers };
+    const itin = getFirstItinerary(offer);
+    const mins = parseISODurationToMin(itin.duration);
+    const segs = itin.segments || [];
+    const stops = typeof offer.stops==="number" ? offer.stops : Math.max(0, segs.length-1);
+    const dep = offer.departureAt || (segs[0]&&segs[0].departureAt);
+    const arr = offer.arrivalAt || (segs[segs.length-1]&&segs[segs.length-1].arrivalAt);
+    const flightNums = segs.map(s=>s.flightNumber||(s.carrierCode&&s.number?s.carrierCode+s.number:null)).filter(Boolean);
+    const carriers = []; for(const s of segs){ const c=s.carrierName||s.carrierCode; if(c&&!carriers.includes(c)) carriers.push(c); }
+    const layovers = segs.slice(0,-1).map(s=>segTo(s)).filter(Boolean);
+    return { mins: mins??null, stops, dep, arr, flightNums, carriers, layovers };
   }
-
   function applyFilters(){
     const f = state.stopsFilter;
     let items = state.rawOffers.slice();
-
-    items = items.filter(o=>{
-      const m=computeMetrics(o);
-      if(f==="any") return true;
-      if(f==="0") return m.stops===0;
-      if(f==="1") return m.stops<=1;
-      if(f==="2") return m.stops>=2;
-      return true;
-    });
-
+    items = items.filter(o=>{ const m=computeMetrics(o); if(f==="any") return true; if(f==="0") return m.stops===0; if(f==="1") return m.stops<=1; if(f==="2") return m.stops>=2; return true; });
     const sortBy=state.sortBy;
-    items.sort((a,b)=>{
-      const ma=computeMetrics(a), mb=computeMetrics(b);
-      if(sortBy==="fastest"){
-        const aa = ma.mins ?? 1e9;
-        const bb = mb.mins ?? 1e9;
-        return aa-bb;
-      }
-      // cheapest
-      const pa = a.price?.total ?? 1e12;
-      const pb = b.price?.total ?? 1e12;
-      return pa-pb;
-    });
-
+    items.sort((a,b)=>{ const ma=computeMetrics(a), mb=computeMetrics(b); if(sortBy==="fastest"){ return (ma.mins??1e9)-(mb.mins??1e9); } const pa=a.price?.total??1e12, pb=b.price?.total??1e12; return pa-pb; });
     state.offers = items;
   }
-
   function render(){
     applyFilters();
-    const list = $("list");
-    list.innerHTML = "";
-    $("error").style.display="none";
+    const list = list; list.innerHTML = "";
+    error.style.display="none";
     const sortLabel = state.sortBy==="fastest" ? "Fastest" : "Cheapest";
-    $("summary").textContent = `${state.offers.length} results · sorted by ${sortLabel}`;
-
-    if(state.offers.length===0){
-      $("empty").style.display="block";
-      return;
-    }
-    $("empty").style.display="none";
-
+    summary.textContent = state.offers.length+" results · sorted by "+sortLabel;
+    if(state.offers.length===0){ empty.style.display="block"; return; }
+    empty.style.display="none";
     for(const o of state.offers){
       const m = computeMetrics(o);
-      const it = getFirstItinerary(o);
-      const segs = it.segments || [];
+      const itin = getFirstItinerary(o);
+      const segs = itin.segments || [];
       const primary = pickPrimaryCarrier(o);
-      const carrierName = (o.carriers && o.carriers[0] && (o.carriers[0].name || o.carriers[0].code)) ? (o.carriers[0].name || o.carriers[0].code) : primary;
+      const carrierName = (o.carriers&&o.carriers[0]&&(o.carriers[0].name||o.carriers[0].code)) ? (o.carriers[0].name||o.carriers[0].code) : primary;
       const from = o.route?.from || segFrom(segs[0]);
       const to = o.route?.to || segTo(segs[segs.length-1]);
-
-      const flightNums = unique(segs.map(s=> segFlightNumber(s)).filter(Boolean));
+      const flightNums = unique(segs.map(s=>segFlightNumber(s)).filter(Boolean));
       const flightNumsLabel = flightNums.join(" / ");
-      const via = segs.slice(1).map(s=> segFrom(s)).filter(Boolean).join(", ");
-
-      const travelClass = (o.travelClass || "ECONOMY").toUpperCase();
-
-      const el = document.createElement("div");
-      el.className="offer";
-
-      el.innerHTML = `
-        <div>
-          <div class="offerTitle">${primary} · ${from || "—"} → ${to || "—"}</div>
-          <div class="offerSub">${formatTime(m.dep)} → ${formatTime(m.arr)} · ${stopsText(m.stops)}${via ? " · via " + via : ""}</div>
-          ${flightNums ? `<div class="offerSub">Flight: ${flightNumsLabel}</div>` : ``}
-          <div class="badge">${travelClass}</div>
-        </div>
-        <div class="price">
-          <b>${money(o.price?.currency || "EUR", o.price?.total)}</b>
-          <span>${it.duration ? ("Duration " + it.duration.replace("PT","").replace("H","h ").replace("M","m")) : ""}</span>
-        </div>
-        <div class="select">
-          <button class="btn" style="background:var(--bg);border:1px solid var(--line);padding:10px 14px" data-id="${o.id}">Select</button>
-        </div>
-      `;
+      const via = segs.slice(1).map(s=>segFrom(s)).filter(Boolean).join(", ");
+      const travelClass = (o.travelClass||"ECONOMY").toUpperCase();
+      const el = document.createElement("div"); el.className="offer";
+      el.innerHTML = "<div><div class=\"offerTitle\">"+primary+" · "+(from||"—")+" → "+(to||"—")+"</div><div class=\"offerSub\">"+formatTime(m.dep)+" → "+formatTime(m.arr)+" · "+stopsText(m.stops)+(via?" · via "+via:"")+"</div>"+(flightNums?"<div class=\"offerSub\">Flight: "+flightNumsLabel+"</div>":"")+"<div class=\"badge\">"+travelClass+"</div></div><div class=\"price\"><b>"+money(o.price?.currency||"EUR", o.price?.total)+"</b><span>"+(itin.duration?"Duration "+itin.duration.replace("PT","").replace("H","h ").replace("M","m"):"")+"</span></div><div class=\"select\"><button class=\"btn\" style=\"background:var(--bg);border:1px solid var(--line);padding:10px 14px\" data-id=\""+o.id+"\">Select</button></div>";
       list.appendChild(el);
     }
   }
-
-  function setError(msg){
-    const e=$("error");
-    e.style.display="block";
-    e.textContent = msg;
-  }
-
+  function setError(msg){ const e=error; e.style.display="block"; e.textContent = msg; }
+  function getCodeFromInput(el){ const v=(el.value||"").trim(); if(!v) return ""; if(/^[A-Z]{3}$/i.test(v)) return v.toUpperCase(); return v; }
   async function apiSearchFlights(){
     const originCode = getCodeFromInput(originEl);
     const destCode = getCodeFromInput(destEl);
     const departDate = departEl.value;
-
     state.lastQuery = { originCode, destCode, departDate };
-
-    $("routeTitle").textContent = `${originCode || "—"} → ${destCode || "—"}`;
-
+    routeTitle.textContent = (originCode||"—")+" → "+(destCode||"—");
     const stopsVal = state.stopsFilter;
     const maxStops = stopsVal==="any" ? null : Number(stopsVal);
-
-    const body = {
-      origin: originCode,
-      destination: destCode,
-      departDate,
-      adults: 1,
-      travelClass: "ECONOMY",
-      maxStops: maxStops
-    };
-
-    const res = await fetch("/api/flights/search", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(body)
-    });
-
+    const body = { origin: originCode, destination: destCode, departDate, adults: 1, travelClass: "ECONOMY", maxStops: maxStops };
+    const res = await fetch("/api/flights/search", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) });
     const json = await res.json().catch(()=>({ error:"Invalid JSON response" }));
-    if(!res.ok){
-      throw new Error(json?.error || JSON.stringify(json));
-    }
+    if(!res.ok){ throw new Error(json?.error || JSON.stringify(json)); }
     return json?.offers || [];
   }
-
   function bindSelect(){
-    $("list").addEventListener("click", (e)=>{
-      const btn = e.target.closest("button[data-id]");
-      if(!btn) return;
+    list.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button[data-id]"); if(!btn) return;
       const id = btn.getAttribute("data-id");
-      const o = state.offers.find(x=>String(x.id)===String(id));
-      if(!o) return;
-
-      const it = getFirstItinerary(o);
-      const segs = it.segments || [];
-      const lines = segs.map(s=>{
-        const num = s.flightNumber ? ` ${s.flightNumber}` : "";
-        return `${s.from || "—"} ${formatTime(s.departureAt)} → ${s.to || "—"} ${formatTime(s.arrivalAt)}${num}`;
-      }).join("\n");
-
-      const it = getFirstItinerary(o);
-      const segs = it.segments || [];
-      const from = o.route?.from || segFrom(segs[0]) || "—";
-      const to = o.route?.to || segTo(segs[segs.length-1]) || "—";
-      const carrierName = (o.carriers && o.carriers[0] && (o.carriers[0].name || o.carriers[0].code)) ? (o.carriers[0].name || o.carriers[0].code) : pickPrimaryCarrier(o);
-      const flightNums = unique(segs.map(s=> segFlightNumber(s)).filter(Boolean));
-      const flightsLine = flightNums.length ? ("Flights: " + flightNums.join(", ")) : "";
-
-      alert(`Selected offer:\n${carrierName} • ${from} → ${to}\n${money(o.price?.currency||"EUR", o.price?.total)}\n${flightsLine}\n\n${lines}\n\n(Phase 2: Price + checkout)`);
+      const o = state.offers.find(x=>String(x.id)===String(id)); if(!o) return;
+      const itin2 = getFirstItinerary(o);
+      const segs2 = itin2.segments || [];
+      const lines = segs2.map(s=>{ const num=s.flightNumber?" "+s.flightNumber:""; return (s.from||"—")+" "+formatTime(s.departureAt)+" → "+(s.to||"—")+" "+formatTime(s.arrivalAt)+num; }).join("\\n");
+      const from2 = o.route?.from || segFrom(segs2[0]) || "—";
+      const to2 = o.route?.to || segTo(segs2[segs2.length-1]) || "—";
+      const carrierName2 = (o.carriers&&o.carriers[0]&&(o.carriers[0].name||o.carriers[0].code)) ? (o.carriers[0].name||o.carriers[0].code) : pickPrimaryCarrier(o);
+      const flightNums2 = unique(segs2.map(s=>segFlightNumber(s)).filter(Boolean));
+      const flightsLine2 = flightNums2.length ? ("Flights: "+flightNums2.join(", ")) : "";
+      alert("Selected offer:\\n"+carrierName2+" • "+from2+" → "+to2+"\\n"+money(o.price?.currency||"EUR", o.price?.total)+"\\n"+flightsLine2+"\\n\\n"+lines+"\\n\\n(Phase 2: Price + checkout)");
     });
   }
-
   function bindControls(){
-    $("stopsGroup").addEventListener("change",(e)=>{
-      const v = document.querySelector('input[name="stops"]:checked')?.value || "any";
-      state.stopsFilter = v;
-      render();
-    });
-    $("sortBy").addEventListener("change",(e)=>{
-      state.sortBy = $("sortBy").value;
-      render();
-    });
-    $("runSearch").addEventListener("click", async ()=>{
-      try{
-        $("error").style.display="none";
-        $("summary").textContent="Searching...";
-        state.rawOffers = await apiSearchFlights();
+    stopsGroup.addEventListener("change", (e)=>{ if(e.target.name==="stops"){ state.stopsFilter=e.target.value; render(); } });
+    sortBy.addEventListener("change", (e)=>{ state.sortBy=e.target.value; render(); });
+    runSearch.addEventListener("click", async ()=>{
+      error.style.display="none"; list.innerHTML=""; empty.style.display="none";
+      try {
+        const offers = await apiSearchFlights();
+        state.rawOffers = offers;
         render();
-      }catch(err){
-        state.rawOffers = [];
-        render();
-        setError(String(err?.message || err));
-      }
+      } catch(err) { setError(err.message); }
     });
-  }
-
-  function getCodeFromInput(el){
-    // if user selected from suggestions, we store code in dataset
-    const ds = (el.dataset || {});
-    if(ds.code) return ds.code;
-    const raw = (el.value || "").trim();
-    const m = raw.toUpperCase().match(/\b([A-Z]{3})\b/);
-    if(m) return m[1];
-    return raw.toUpperCase();
-  }
-
-  function clearCodeOnType(el){
-    el.addEventListener("input", ()=>{
-      el.dataset.code = "";
-    });
-  }
-
-  function debounce(fn, wait){
-    let t=null;
-    return (...args)=>{
-      if(t) clearTimeout(t);
-      t=setTimeout(()=>fn(...args), wait);
-    };
-  }
-
-  async function fetchLocations(keyword){
-    const q = keyword.trim();
-    if(q.length<2) return [];
-    const res = await fetch(`/api/locations/search?keyword=${encodeURIComponent(q)}`);
-    const json = await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(json?.error || JSON.stringify(json));
-    const data = json?.data || json?.locations || [];
-    return Array.isArray(data) ? data : [];
-  }
-
-  function renderSuggest(container, inputEl, items){
-    container.innerHTML = "";
-    if(!items.length){
-      container.innerHTML = `<div class="hint">No matches</div>`;
-      container.style.display="block";
-      return;
-    }
-    for(const it of items){
-      const code = it.iataCode || it.iata || it.code;
-      if(!code) continue;
-      const name = it.name || it.detailedName || it.address?.cityName || it.address?.cityCode || "Location";
-      const subtype = it.subType || it.subtype || "";
-      const city = it.address?.cityName ? `, ${it.address.cityName}` : "";
-      const country = it.address?.countryName ? `, ${it.address.countryName}` : "";
-      const label = `${name}${city}${country} (${code})${subtype ? " · " + subtype : ""}`;
-
-      const btn = document.createElement("button");
-      btn.type="button";
-      btn.textContent = label;
-      btn.addEventListener("click", ()=>{
-        inputEl.value = `${name} (${code})`;
-        inputEl.dataset.code = String(code).toUpperCase();
-        container.style.display="none";
+    function setupSuggest(input, suggest, onSelect){
+      let timeout=null;
+      input.addEventListener("input", ()=>{
+        clearTimeout(timeout);
+        const q=(input.value||"").trim();
+        if(q.length<2){ suggest.style.display="none"; return; }
+        timeout=setTimeout(async ()=>{
+          try {
+            const res=await fetch("/api/locations/search?keyword="+encodeURIComponent(q));
+            const data=await res.json();
+            if(!Array.isArray(data)||data.length===0){ suggest.style.display="none"; return; }
+            suggest.innerHTML="";
+            for(const item of data){
+              const btn=document.createElement("button");
+              btn.textContent=item.name+" ("+item.iataCode+") - "+(item.type||"");
+              btn.addEventListener("click", ()=>{ input.value=item.iataCode; suggest.style.display="none"; if(onSelect) onSelect(item); });
+              suggest.appendChild(btn);
+            }
+            suggest.style.display="block";
+          } catch(e){ suggest.style.display="none"; }
+        }, 300);
       });
-      container.appendChild(btn);
+      document.addEventListener("click", (e)=>{ if(!suggest.contains(e.target)&&e.target!==input){ suggest.style.display="none"; } });
     }
-    container.style.display="block";
+    setupSuggest(originEl, originSuggest);
+    setupSuggest(destEl, destSuggest);
   }
-
-  function bindAutocomplete(inputEl, container){
-    const doFetch = debounce(async ()=>{
-      const q = inputEl.value.trim();
-      if(q.length<2){ container.style.display="none"; return; }
-      try{
-        const items = await fetchLocations(q);
-        renderSuggest(container, inputEl, items.slice(0,10));
-      }catch(err){
-        container.innerHTML = `<div class="hint">Lookup failed</div>`;
-        container.style.display="block";
-      }
-    }, 250);
-
-    inputEl.addEventListener("focus", doFetch);
-    inputEl.addEventListener("input", doFetch);
-
-    document.addEventListener("click",(e)=>{
-      if(container.contains(e.target) || inputEl.contains(e.target)) return;
-      container.style.display="none";
-    });
-  }
-
-  // defaults
-  originEl.value = "Delhi (DEL)";
-  originEl.dataset.code = "DEL";
-  destEl.value = "London (LON)";
-  destEl.dataset.code = "LON";
-  $("routeTitle").textContent = "DEL → LON";
-
-  clearCodeOnType(originEl);
-  clearCodeOnType(destEl);
-
-  bindAutocomplete(originEl, originSuggest);
-  bindAutocomplete(destEl, destSuggest);
-
-  bindControls();
   bindSelect();
-
-  // Run one search on load
-  $("runSearch").click();
+  bindControls();
 })();
 </script>
 </body>
