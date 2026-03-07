@@ -1,228 +1,779 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Flight Search</title>
-
-<link rel="icon" href="/favicon.ico" type="image/x-icon" />
-
-<style>
-body{
-margin:0;
-font-family:system-ui,-apple-system,sans-serif;
-background:#f5f7fb;
-}
-
-.topbar{
-background:#0f7283;
-color:white;
-padding:16px;
-display:flex;
-gap:10px;
-align-items:center;
-}
-
-input{
-padding:8px;
-border-radius:8px;
-border:none;
-}
-
-button{
-padding:8px 14px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-background:white;
-color:#0f7283;
-font-weight:600;
-}
-
-.container{
-padding:20px;
-max-width:1100px;
-margin:auto;
-}
-
-.card{
-background:white;
-border-radius:14px;
-padding:16px;
-margin-bottom:12px;
-border:1px solid #e2e8f0;
-}
-
-.suggest{
-position:absolute;
-background:white;
-border:1px solid #e2e8f0;
-border-radius:10px;
-margin-top:4px;
-display:none;
-z-index:10;
-}
-
-.suggest button{
-display:block;
-width:100%;
-text-align:left;
-background:none;
-border:none;
-padding:8px;
-}
-
-.suggest button:hover{
-background:#f5f7fb;
-}
-
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flight Search</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#fff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --brand:#0f7283;
+      --brand-2:#0b5e6d;
+      --danger:#b91c1c;
+      --shadow:0 8px 24px rgba(15,23,42,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:linear-gradient(180deg,#eef7f9 0,#f5f7fb 180px);
+      color:var(--text);
+    }
+    .hero{
+      background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      color:#fff;
+      padding:20px 18px 24px;
+      box-shadow:var(--shadow);
+    }
+    .hero-inner{
+      max-width:1200px;
+      margin:0 auto;
+    }
+    .hero-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:16px;
+    }
+    .brand{
+      font-weight:800;
+      font-size:20px;
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      font-size:12px;
+      opacity:.9;
+      margin-top:4px;
+    }
+    .search-bar{
+      display:grid;
+      grid-template-columns:1fr 1fr 180px 120px;
+      gap:12px;
+      align-items:stretch;
+    }
+    .field{
+      position:relative;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.22);
+      border-radius:18px;
+      padding:10px 14px;
+      min-height:68px;
+      backdrop-filter:blur(6px);
+    }
+    .field label{
+      display:block;
+      font-size:12px;
+      opacity:.9;
+      margin-bottom:6px;
+    }
+    .field input{
+      width:100%;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:#fff;
+      font-size:18px;
+      font-weight:700;
+    }
+    .field input::placeholder{color:rgba(255,255,255,.75)}
+    .search-btn{
+      border:none;
+      border-radius:18px;
+      background:#fff;
+      color:var(--brand);
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:var(--shadow);
+    }
+    .search-btn:hover{transform:translateY(-1px)}
+    .suggest{
+      position:absolute;
+      left:0;
+      right:0;
+      top:74px;
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow:0 14px 40px rgba(2,8,23,.14);
+      padding:6px;
+      display:none;
+      max-height:300px;
+      overflow:auto;
+      z-index:30;
+    }
+    .suggest button{
+      width:100%;
+      text-align:left;
+      border:none;
+      background:transparent;
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+    }
+    .suggest button:hover{background:#f8fafc}
+    .s-title{font-weight:700;font-size:14px}
+    .s-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .container{
+      max-width:1200px;
+      margin:18px auto;
+      padding:0 18px 24px;
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:18px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+    }
+    .sidebar{padding:16px}
+    .sidebar h3{
+      font-size:14px;
+      margin:0 0 10px;
+    }
+    .radio-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      font-size:14px;
+    }
+    .radio-list label{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+    }
+    .sidebar select{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      background:#fff;
+      font-size:14px;
+    }
+    .muted{color:var(--muted);font-size:12px}
+    .results{
+      padding:16px;
+    }
+    .results-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+    .results-header b{font-size:18px}
+    .error{
+      display:none;
+      color:var(--danger);
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:13px;
+      white-space:pre-wrap;
+      margin-bottom:12px;
+    }
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .empty{
+      display:none;
+      text-align:center;
+      color:var(--muted);
+      padding:28px 10px;
+      font-size:14px;
+    }
+    .offer{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      display:grid;
+      grid-template-columns:1fr 180px 120px;
+      gap:14px;
+      align-items:center;
+      background:#fff;
+    }
+    .offer-title{
+      font-size:16px;
+      font-weight:800;
+      margin-bottom:4px;
+    }
+    .offer-row{
+      font-size:14px;
+      color:var(--muted);
+      margin-top:4px;
+      line-height:1.45;
+    }
+    .offer-tags{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      padding:5px 10px;
+      border-radius:999px;
+      background:#f8fafc;
+      font-size:12px;
+      color:#334155;
+      border:1px solid var(--line);
+    }
+    .price{
+      text-align:right;
+    }
+    .price b{
+      display:block;
+      font-size:22px;
+      margin-bottom:4px;
+    }
+    .price span{
+      color:var(--muted);
+      font-size:12px;
+    }
+    .select{
+      justify-self:end;
+    }
+    .select button{
+      border:none;
+      background:var(--brand);
+      color:#fff;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .select button:hover{background:var(--brand-2)}
+    @media (max-width: 980px){
+      .search-bar{grid-template-columns:1fr 1fr}
+      .container{grid-template-columns:1fr}
+      .offer{grid-template-columns:1fr}
+      .price,.select{text-align:left;justify-self:start}
+    }
+    @media (max-width: 640px){
+      .search-bar{grid-template-columns:1fr}
+    }
+  </style>
 </head>
-
 <body>
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-top">
+        <div>
+          <div class="brand">Flight Search</div>
+          <div class="subtitle">输入城市名或机场代码，系统会自动解析并查询真实航班报价</div>
+        </div>
+      </div>
 
-<div class="topbar">
-<input id="origin" placeholder="From city or airport"/>
-<div id="originSuggest" class="suggest"></div>
+      <div class="search-bar">
+        <div class="field">
+          <label>From</label>
+          <input id="origin" placeholder="London / LON" autocomplete="off" />
+          <div id="originSuggest" class="suggest"></div>
+        </div>
 
-<input id="dest" placeholder="To city or airport"/>
-<div id="destSuggest" class="suggest"></div>
+        <div class="field">
+          <label>To</label>
+          <input id="dest" placeholder="New York / JFK" autocomplete="off" />
+          <div id="destSuggest" class="suggest"></div>
+        </div>
 
-<input id="depart" type="date"/>
+        <div class="field">
+          <label>Date</label>
+          <input id="depart" type="date" />
+        </div>
 
-<button id="searchBtn">Search</button>
-</div>
+        <button id="runSearch" class="search-btn">Search</button>
+      </div>
+    </div>
+  </div>
 
-<div class="container">
-<div id="results"></div>
-</div>
+  <div class="container">
+    <div class="card sidebar">
+      <h3>Stops</h3>
+      <div id="stopsGroup" class="radio-list">
+        <label><input type="radio" name="stops" value="any" checked> Any</label>
+        <label><input type="radio" name="stops" value="0"> Direct</label>
+        <label><input type="radio" name="stops" value="1"> 1 stop max</label>
+        <label><input type="radio" name="stops" value="2"> 2 stops max</label>
+      </div>
+
+      <h3 style="margin-top:16px;">Sort by</h3>
+      <select id="sortBy">
+        <option value="cheapest">Cheapest first</option>
+        <option value="fastest">Fastest</option>
+      </select>
+
+      <div class="muted" style="margin-top:14px;">
+        提示：如果不点下拉，点击 Search 也会自动尝试把城市解析成 IATA 代码。
+      </div>
+    </div>
+
+    <div class="card results">
+      <div class="results-header">
+        <div>
+          <b id="summary">0 results</b>
+          <div class="muted" id="resolvedInfo" style="margin-top:4px;"></div>
+        </div>
+      </div>
+
+      <div id="error" class="error"></div>
+      <div id="list" class="list"></div>
+      <div id="empty" class="empty">No flights found</div>
+    </div>
+  </div>
 
 <script>
+  var originEl, destEl, departEl, originSuggest, destSuggest;
+  var state = {
+    rawOffers: [],
+    visibleOffers: [],
+    stopsFilter: "any",
+    sortBy: "cheapest"
+  };
 
-var originEl = document.getElementById("origin")
-var destEl = document.getElementById("dest")
-var departEl = document.getElementById("depart")
+  function init() {
+    originEl = document.getElementById("origin");
+    destEl = document.getElementById("dest");
+    departEl = document.getElementById("depart");
+    originSuggest = document.getElementById("originSuggest");
+    destSuggest = document.getElementById("destSuggest");
 
-var originSuggest = document.getElementById("originSuggest")
-var destSuggest = document.getElementById("destSuggest")
+    var d = new Date();
+    d.setDate(d.getDate() + 14);
+    departEl.value = d.toISOString().slice(0, 10);
 
-var timeout
+    bindControls();
+    bindSelect();
+  }
 
-function showSuggestions(el,suggestBox,data){
+  function escapeHtml(v) {
+    return String(v == null ? "" : v)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 
-suggestBox.innerHTML=""
+  function fmtTime(v) {
+    if (!v) return "—";
+    if (typeof v === "string" && v.indexOf("T") > -1 && v.length >= 16) {
+      return v.slice(11, 16);
+    }
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return "—";
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
 
-data.forEach(function(item){
+  function formatDuration(v) {
+    if (!v) return "";
+    if (typeof v === "number" && isFinite(v)) {
+      var h = Math.floor(v / 60);
+      var m = v % 60;
+      return h + "h " + String(m).padStart(2, "0") + "m";
+    }
+    if (typeof v === "string") {
+      var m = v.match(/^PT(?:(\d+)H)?(?:(\d+)M)?$/i);
+      if (m) {
+        var hh = m[1] ? Number(m[1]) : 0;
+        var mm = m[2] ? Number(m[2]) : 0;
+        return (hh ? hh + "h " : "") + (mm ? mm + "m" : "");
+      }
+      return v;
+    }
+    return "";
+  }
 
-var btn=document.createElement("button")
+  function money(currency, total) {
+    if (total == null || !isFinite(Number(total))) return (currency || "EUR") + " —";
+    return (currency || "EUR") + " " + Number(total).toFixed(2);
+  }
 
-btn.textContent=item.name+" ("+item.iataCode+")"
+  function stopsText(n) {
+    if (n === 0) return "Direct";
+    if (n === 1) return "1 stop";
+    return n + " stops";
+  }
 
-btn.onclick=function(){
-el.value=item.iataCode
-suggestBox.style.display="none"
-}
+  function getSegments(o) {
+    if (Array.isArray(o.segments) && o.segments.length) return o.segments;
+    var itineraries = o.itineraries || [];
+    var it0 = itineraries[0] || {};
+    return it0.segments || [];
+  }
 
-suggestBox.appendChild(btn)
+  function getAirline(o, segs) {
+    return (
+      o.airline ||
+      o.airlineName ||
+      o.carrierName ||
+      (o.carriers && o.carriers[0] && (o.carriers[0].name || o.carriers[0].code)) ||
+      (segs[0] && (segs[0].carrierName || segs[0].airline || segs[0].carrierCode)) ||
+      "Airline"
+    );
+  }
 
-})
+  function getFromCode(o, segs) {
+    return (
+      o.from ||
+      o.origin ||
+      o.originLocationCode ||
+      (segs[0] && (
+        segs[0].fromCode ||
+        segs[0].from ||
+        (segs[0].departure && segs[0].departure.iataCode)
+      )) ||
+      "—"
+    );
+  }
 
-suggestBox.style.display="block"
+  function getToCode(o, segs) {
+    var last = segs[segs.length - 1];
+    return (
+      o.to ||
+      o.destination ||
+      o.destinationLocationCode ||
+      (last && (
+        last.toCode ||
+        last.to ||
+        (last.arrival && last.arrival.iataCode)
+      )) ||
+      "—"
+    );
+  }
 
-}
+  function getFlightNumbers(o, segs) {
+    if (o.flightNumbersText) return o.flightNumbersText;
+    if (o.flightNumber) return o.flightNumber;
+    if (Array.isArray(o.flightNumbers) && o.flightNumbers.length) return o.flightNumbers.join(", ");
 
-function setupSuggest(input,suggestBox){
+    var out = [];
+    for (var i = 0; i < segs.length; i++) {
+      var s = segs[i];
+      var no = s.flightNumber || ((s.carrierCode || "") + (s.number || ""));
+      if (no) out.push(no);
+    }
+    return out.join(", ");
+  }
 
-input.addEventListener("input",function(){
+  function getTotalPrice(o) {
+    return (
+      (o.price && (o.price.total ?? o.price.grandTotal ?? o.price.base)) ??
+      o.total ??
+      o.amount ??
+      o.priceTotal ??
+      null
+    );
+  }
 
-clearTimeout(timeout)
+  function getCurrency(o) {
+    return (o.price && o.price.currency) || o.currency || "EUR";
+  }
 
-var q=input.value.trim()
+  function computeMetrics(o) {
+    var segs = getSegments(o);
+    var stops = typeof o.stops === "number" ? o.stops : Math.max(0, segs.length - 1);
 
-if(q.length<2){
-suggestBox.style.display="none"
-return
-}
+    var dep = o.departAt || o.departureAt || o.departTime || (segs[0] && ((segs[0].departure && segs[0].departure.at) || segs[0].departAt));
+    var arr = o.arriveAt || o.arrivalAt || o.arriveTime || (segs[segs.length - 1] && ((segs[segs.length - 1].arrival && segs[segs.length - 1].arrival.at) || segs[segs.length - 1].arriveAt));
 
-timeout=setTimeout(function(){
+    return { stops: stops, dep: dep, arr: arr };
+  }
 
-fetch("/api/locations/search?keyword="+encodeURIComponent(q))
-.then(r=>r.json())
-.then(data=>{
+  function render() {
+    var list = document.getElementById("list");
+    var empty = document.getElementById("empty");
+    list.innerHTML = "";
 
-if(!Array.isArray(data)||data.length==0){
-suggestBox.style.display="none"
-return
-}
+    var items = state.rawOffers.slice();
 
-showSuggestions(input,suggestBox,data)
+    if (state.stopsFilter !== "any") {
+      var maxStops = Number(state.stopsFilter);
+      items = items.filter(function(o) {
+        return computeMetrics(o).stops <= maxStops;
+      });
+    }
 
-})
-.catch(err=>{
-console.log("suggest error",err)
-suggestBox.style.display="none"
-})
+    if (state.sortBy === "cheapest") {
+      items.sort(function(a, b) {
+        return Number(getTotalPrice(a) || 1e12) - Number(getTotalPrice(b) || 1e12);
+      });
+    } else if (state.sortBy === "fastest") {
+      items.sort(function(a, b) {
+        return Number(a.durationMinutes || 1e12) - Number(b.durationMinutes || 1e12);
+      });
+    }
 
-},300)
+    state.visibleOffers = items;
+    document.getElementById("summary").textContent = items.length + " results";
 
-})
+    if (!items.length) {
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
 
-}
+    items.forEach(function(o, idx) {
+      var segs = getSegments(o);
+      var m = computeMetrics(o);
 
-setupSuggest(originEl,originSuggest)
-setupSuggest(destEl,destSuggest)
+      var from = getFromCode(o, segs);
+      var to = getToCode(o, segs);
+      var airline = getAirline(o, segs);
+      var flightNumbers = getFlightNumbers(o, segs);
+      var totalPrice = getTotalPrice(o);
+      var currency = getCurrency(o);
 
-document.getElementById("searchBtn").onclick=function(){
+      var duration =
+        o.durationText ||
+        formatDuration(o.durationMinutes) ||
+        formatDuration(o.duration) ||
+        "";
 
-var origin=originEl.value
-var dest=destEl.value
-var date=departEl.value
+      var vias = [];
+      if (segs.length > 1) {
+        for (var j = 0; j < segs.length - 1; j++) {
+          var viaCode =
+            segs[j].toCode ||
+            segs[j].to ||
+            (segs[j].arrival && segs[j].arrival.iataCode) ||
+            "";
+          if (viaCode) vias.push(viaCode);
+        }
+      }
+      var viaText = vias.length ? (" · via " + vias.join(", ")) : "";
 
-fetch("/api/flights/search",{
-method:"POST",
-headers:{ "Content-Type":"application/json" },
-body:JSON.stringify({
-origin:origin,
-destination:dest,
-departDate:date,
-adults:1
-})
-})
-.then(r=>r.json())
-.then(data=>{
+      var el = document.createElement("div");
+      el.className = "offer";
+      el.innerHTML =
+        '<div>' +
+          '<div class="offer-title">' + escapeHtml(airline) + '</div>' +
+          '<div class="offer-row">' + escapeHtml(from) + ' → ' + escapeHtml(to) + '</div>' +
+          '<div class="offer-row">' + fmtTime(m.dep) + ' → ' + fmtTime(m.arr) + ' · ' + stopsText(m.stops) + viaText + '</div>' +
+          '<div class="offer-row">Flight: ' + escapeHtml(flightNumbers || "—") + '</div>' +
+          '<div class="offer-tags">' +
+            '<span class="tag">' + escapeHtml(o.travelClass || "ECONOMY") + '</span>' +
+            (duration ? ('<span class="tag">' + escapeHtml(duration) + '</span>') : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="price">' +
+          '<b>' + escapeHtml(money(currency, totalPrice)) + '</b>' +
+          '<span>' + escapeHtml(duration || "") + '</span>' +
+        '</div>' +
+        '<div class="select">' +
+          '<button data-id="' + escapeHtml(String(o.id || idx)) + '">Select</button>' +
+        '</div>';
 
-var container=document.getElementById("results")
+      list.appendChild(el);
+    });
+  }
 
-container.innerHTML=""
+  function setError(msg) {
+    var e = document.getElementById("error");
+    e.style.display = "block";
+    e.textContent = msg;
+    document.getElementById("list").innerHTML = "";
+    document.getElementById("empty").style.display = "none";
+  }
 
-if(!data.offers||data.offers.length===0){
-container.innerHTML="<div class='card'>No flights found</div>"
-return
-}
+  function clearError() {
+    var e = document.getElementById("error");
+    e.style.display = "none";
+    e.textContent = "";
+  }
 
-data.offers.forEach(function(o){
+  async function resolveIata(value) {
+    var v = (value || "").trim();
+    if (!v) throw new Error("Empty city / airport");
+    if (/^[A-Z]{3}$/i.test(v)) return v.toUpperCase();
 
-var div=document.createElement("div")
+    var res = await fetch("/api/locations/search?keyword=" + encodeURIComponent(v));
+    var data = await res.json();
 
-div.className="card"
+    if (!res.ok) {
+      throw new Error((data && data.error) ? data.error : "Location resolve failed");
+    }
 
-div.innerHTML=
-"<b>"+(o.carriers?.[0]?.name||"Airline")+"</b><br>"+
-o.itineraries?.[0]?.segments?.[0]?.departure?.iataCode+
-" → "+
-o.itineraries?.[0]?.segments?.slice(-1)[0]?.arrival?.iataCode+
-"<br><br>"+
-"<b>"+o.price?.currency+" "+o.price?.total+"</b>"
+    if (Array.isArray(data) && data.length > 0 && data[0].iataCode) {
+      return String(data[0].iataCode).toUpperCase();
+    }
 
-container.appendChild(div)
+    throw new Error("Could not resolve location: " + v);
+  }
 
-})
+  function buildSuggestButton(item, inputEl, suggestBox) {
+    var btn = document.createElement("button");
+    var title = (item.name || item.city || "Unknown") + " (" + (item.iataCode || "—") + ")";
+    var sub = [item.type, item.city, item.country].filter(Boolean).join(" · ");
+    btn.innerHTML =
+      '<div class="s-title">' + escapeHtml(title) + '</div>' +
+      (sub ? ('<div class="s-sub">' + escapeHtml(sub) + '</div>') : '');
 
-})
+    btn.onclick = function() {
+      inputEl.value = item.iataCode || "";
+      suggestBox.style.display = "none";
+    };
+    return btn;
+  }
 
-}
+  function attachSuggest(inputEl, suggestBox) {
+    var timeout;
 
+    inputEl.addEventListener("input", function() {
+      clearTimeout(timeout);
+      var q = (inputEl.value || "").trim();
+
+      if (q.length < 2) {
+        suggestBox.style.display = "none";
+        return;
+      }
+
+      timeout = setTimeout(function() {
+        fetch("/api/locations/search?keyword=" + encodeURIComponent(q))
+          .then(function(r) {
+            return r.json().then(function(data) {
+              return { ok: r.ok, data: data };
+            });
+          })
+          .then(function(result) {
+            if (!result.ok || !Array.isArray(result.data) || result.data.length === 0) {
+              suggestBox.style.display = "none";
+              return;
+            }
+
+            suggestBox.innerHTML = "";
+            result.data.forEach(function(item) {
+              suggestBox.appendChild(buildSuggestButton(item, inputEl, suggestBox));
+            });
+            suggestBox.style.display = "block";
+          })
+          .catch(function() {
+            suggestBox.style.display = "none";
+          });
+      }, 250);
+    });
+
+    inputEl.addEventListener("blur", function() {
+      setTimeout(function() {
+        suggestBox.style.display = "none";
+      }, 180);
+    });
+  }
+
+  async function doSearch() {
+    var originRaw = (originEl.value || "").trim();
+    var destRaw = (destEl.value || "").trim();
+    var date = departEl.value;
+
+    if (!originRaw || !destRaw || !date) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    clearError();
+    document.getElementById("list").innerHTML = "Loading...";
+    document.getElementById("empty").style.display = "none";
+
+    try {
+      var originCode = await resolveIata(originRaw);
+      var destCode = await resolveIata(destRaw);
+
+      originEl.value = originCode;
+      destEl.value = destCode;
+
+      document.getElementById("resolvedInfo").textContent =
+        "Resolved: " + originRaw + " → " + originCode + " · " + destRaw + " → " + destCode;
+
+      var body = {
+        origin: originCode,
+        destination: destCode,
+        departDate: date,
+        adults: 1,
+        travelClass: "ECONOMY"
+      };
+
+      var res = await fetch("/api/flights/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      var json = await res.json();
+
+      if (!res.ok) {
+        throw new Error((json && json.error) ? json.error : "Search failed");
+      }
+
+      state.rawOffers = (json && json.offers) ? json.offers : [];
+      render();
+    } catch (err) {
+      setError(err && err.message ? err.message : String(err));
+    }
+  }
+
+  function bindControls() {
+    document.getElementById("stopsGroup").addEventListener("change", function(e) {
+      if (e.target && e.target.name === "stops") {
+        state.stopsFilter = e.target.value;
+        render();
+      }
+    });
+
+    document.getElementById("sortBy").addEventListener("change", function(e) {
+      state.sortBy = e.target.value;
+      render();
+    });
+
+    document.getElementById("runSearch").addEventListener("click", doSearch);
+
+    attachSuggest(originEl, originSuggest);
+    attachSuggest(destEl, destSuggest);
+  }
+
+  function bindSelect() {
+    document.getElementById("list").addEventListener("click", function(e) {
+      var btn = e.target.closest("button[data-id]");
+      if (!btn) return;
+
+      var id = btn.getAttribute("data-id");
+      var o = state.visibleOffers.find(function(x) {
+        return String(x.id || "") === String(id || "");
+      });
+      if (!o) return;
+
+      var segs = getSegments(o);
+      var m = computeMetrics(o);
+
+      alert(
+        "航司: " + getAirline(o, segs) + "\n" +
+        "航线: " + getFromCode(o, segs) + " → " + getToCode(o, segs) + "\n" +
+        "航班号: " + (getFlightNumbers(o, segs) || "—") + "\n" +
+        "时间: " + fmtTime(m.dep) + " → " + fmtTime(m.arr) + "\n" +
+        "中转: " + stopsText(m.stops) + "\n" +
+        "价格: " + money(getCurrency(o), getTotalPrice(o))
+      );
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 </script>
-
 </body>
 </html>
