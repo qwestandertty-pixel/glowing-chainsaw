@@ -1,35 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flight Search</title>
+
+<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+<style>
+body{
+margin:0;
+font-family:system-ui,-apple-system,sans-serif;
+background:#f5f7fb;
+}
+
+.topbar{
+background:#0f7283;
+color:white;
+padding:16px;
+display:flex;
+gap:10px;
+align-items:center;
+}
+
+input{
+padding:8px;
+border-radius:8px;
+border:none;
+}
+
+button{
+padding:8px 14px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+background:white;
+color:#0f7283;
+font-weight:600;
+}
+
+.container{
+padding:20px;
+max-width:1100px;
+margin:auto;
+}
+
+.card{
+background:white;
+border-radius:14px;
+padding:16px;
+margin-bottom:12px;
+border:1px solid #e2e8f0;
+}
+
+.suggest{
+position:absolute;
+background:white;
+border:1px solid #e2e8f0;
+border-radius:10px;
+margin-top:4px;
+display:none;
+z-index:10;
+}
+
+.suggest button{
+display:block;
+width:100%;
+text-align:left;
+background:none;
+border:none;
+padding:8px;
+}
+
+.suggest button:hover{
+background:#f5f7fb;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+<input id="origin" placeholder="From city or airport"/>
+<div id="originSuggest" class="suggest"></div>
+
+<input id="dest" placeholder="To city or airport"/>
+<div id="destSuggest" class="suggest"></div>
+
+<input id="depart" type="date"/>
+
+<button id="searchBtn">Search</button>
+</div>
+
+<div class="container">
+<div id="results"></div>
+</div>
+
 <script>
-originEl.addEventListener("input", function() {
-  clearTimeout(timeout);
-  var q = (originEl.value || "").trim();
-  if (q.length < 2) { originSuggest.style.display = "none"; return; }
 
-  timeout = setTimeout(function() {
-    fetch("/api/locations/search?keyword=" + encodeURIComponent(q))
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!Array.isArray(data) || data.length === 0) {
-          originSuggest.style.display = "none";
-          return;
-        }
+var originEl = document.getElementById("origin")
+var destEl = document.getElementById("dest")
+var departEl = document.getElementById("depart")
 
-        originSuggest.innerHTML = "";
-        data.forEach(function(item) {
-          var btn = document.createElement("button");
-          btn.textContent = item.name + " (" + item.iataCode + ")";
-          btn.onclick = function() {
-            originEl.value = item.iataCode;
-            originSuggest.style.display = "none";
-          };
-          originSuggest.appendChild(btn);
-        });
+var originSuggest = document.getElementById("originSuggest")
+var destSuggest = document.getElementById("destSuggest")
 
-        originSuggest.style.display = "block";
-      })
-      .catch(function(err) {
-        console.error("origin suggest error", err);
-        originSuggest.style.display = "none";
-      });
-  }, 300);
-});
-<script>
+var timeout
+
+function showSuggestions(el,suggestBox,data){
+
+suggestBox.innerHTML=""
+
+data.forEach(function(item){
+
+var btn=document.createElement("button")
+
+btn.textContent=item.name+" ("+item.iataCode+")"
+
+btn.onclick=function(){
+el.value=item.iataCode
+suggestBox.style.display="none"
+}
+
+suggestBox.appendChild(btn)
+
+})
+
+suggestBox.style.display="block"
+
+}
+
+function setupSuggest(input,suggestBox){
+
+input.addEventListener("input",function(){
+
+clearTimeout(timeout)
+
+var q=input.value.trim()
+
+if(q.length<2){
+suggestBox.style.display="none"
+return
+}
+
+timeout=setTimeout(function(){
+
+fetch("/api/locations/search?keyword="+encodeURIComponent(q))
+.then(r=>r.json())
+.then(data=>{
+
+if(!Array.isArray(data)||data.length==0){
+suggestBox.style.display="none"
+return
+}
+
+showSuggestions(input,suggestBox,data)
+
+})
+.catch(err=>{
+console.log("suggest error",err)
+suggestBox.style.display="none"
+})
+
+},300)
+
+})
+
+}
+
+setupSuggest(originEl,originSuggest)
+setupSuggest(destEl,destSuggest)
+
+document.getElementById("searchBtn").onclick=function(){
+
+var origin=originEl.value
+var dest=destEl.value
+var date=departEl.value
+
+fetch("/api/flights/search",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({
+origin:origin,
+destination:dest,
+departDate:date,
+adults:1
+})
+})
+.then(r=>r.json())
+.then(data=>{
+
+var container=document.getElementById("results")
+
+container.innerHTML=""
+
+if(!data.offers||data.offers.length===0){
+container.innerHTML="<div class='card'>No flights found</div>"
+return
+}
+
+data.offers.forEach(function(o){
+
+var div=document.createElement("div")
+
+div.className="card"
+
+div.innerHTML=
+"<b>"+(o.carriers?.[0]?.name||"Airline")+"</b><br>"+
+o.itineraries?.[0]?.segments?.[0]?.departure?.iataCode+
+" → "+
+o.itineraries?.[0]?.segments?.slice(-1)[0]?.arrival?.iataCode+
+"<br><br>"+
+"<b>"+o.price?.currency+" "+o.price?.total+"</b>"
+
+container.appendChild(div)
+
+})
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
