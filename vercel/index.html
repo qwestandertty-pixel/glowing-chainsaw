@@ -2,213 +2,847 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Flights</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flight Search</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <style>
     :root{
-      --bg:#f3f7fb; --card:#fff; --text:#0f172a; --muted:#64748b; --line:#e2e8f0;
-      --brand:#0f7283; --brand2:#0b5f6d; --accent:#18a0b6; --danger:#b91c1c;
-      --shadow:0 10px 32px rgba(15,23,42,.09); --radius:24px;
+      --bg:#f3f7fb;
+      --surface:#ffffff;
+      --text:#142230;
+      --muted:#6b7a8c;
+      --line:#dfe7ef;
+      --blue:#2f6fff;
+      --blue2:#1c56d8;
+      --teal:#14767c;
+      --teal2:#0f5f69;
+      --sand:#f0d8c1;
+      --rose:#d89ab3;
+      --gold:#d69f4c;
+      --card-shadow:0 14px 36px rgba(20,34,48,.12);
+      --soft-shadow:0 8px 24px rgba(20,34,48,.08);
+      --radius:24px;
+      --max:1280px;
     }
+
     *{box-sizing:border-box}
-    body{
-      margin:0; color:var(--text);
+    html,body{
+      margin:0;
+      padding:0;
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(circle at 15% 0%, rgba(24,160,182,.12), transparent 28%),
-        radial-gradient(circle at 85% 5%, rgba(15,114,131,.10), transparent 26%),
-        linear-gradient(180deg,#e9f5f7 0,#f3f7fb 220px,#f3f7fb 100%);
+        radial-gradient(circle at 10% 0%, rgba(120,180,255,.14), transparent 26%),
+        radial-gradient(circle at 90% 0%, rgba(255,205,162,.18), transparent 22%),
+        linear-gradient(180deg,#eef5fb 0,#f3f7fb 220px,#f3f7fb 100%);
     }
+
+    .container{max-width:var(--max);margin:0 auto;padding:0 20px}
+
     .hero{
-      position:relative; overflow:hidden; color:#fff;
+      position:relative;
+      overflow:hidden;
       background:
-        linear-gradient(135deg, rgba(15,114,131,.98), rgba(11,95,109,.98)),
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 700'><defs><linearGradient id='g' x1='0' x2='1'><stop stop-color='%2318a0b6' stop-opacity='.18'/><stop offset='1' stop-color='%23ffffff' stop-opacity='.05'/></linearGradient></defs><rect width='1600' height='700' fill='url(%23g)'/><path d='M0 512c145-76 257-96 395-72 129 22 205 96 351 98 142 1 212-57 322-58 105 0 188 34 333 10V700H0z' fill='rgba(255,255,255,.07)'/><path d='M1051 198l-189 50-130-22 88 75-47 113 98-66 84 49-26-103 122-96z' fill='rgba(255,255,255,.18)'/></svg>");
+        linear-gradient(180deg,rgba(12,34,50,.10),rgba(12,34,50,.28)),
+        linear-gradient(135deg,#7eb6ff 0%, #9bd1f0 24%, #f6c8a0 58%, #9ad4c8 100%);
+      min-height:620px;
+    }
+
+    .hero:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background-image:url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 800'>\
+<defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop stop-color='%23d9ecff'/><stop offset='1' stop-color='%23fff1df'/></linearGradient></defs>\
+<rect width='1600' height='800' fill='url(%23g)'/>\
+<path d='M0 530c124-42 247-49 370-15 120 34 190 88 307 91 136 3 220-57 331-59 115-1 196 34 305 18 96-14 177-56 287-48v183H0z' fill='%23cfe5ef'/>\
+<path d='M0 615c96-26 176-24 262 6 98 35 145 74 245 72 110-1 154-53 243-55 87-1 141 35 240 37 106 2 154-33 242-49 63-11 111-11 168-2v176H0z' fill='%23b6d7c6'/>\
+<circle cx='1240' cy='178' r='68' fill='%23fff4dd'/>\
+<path d='M816 205l-164 43-104-19 69 61-36 82 72-48 62 36-21-75 122-80z' fill='%23507aa9' opacity='.72'/>\
+<rect x='1124' y='332' width='92' height='200' fill='%2377a6bd'/>\
+<rect x='1204' y='250' width='62' height='282' fill='%235f88aa'/>\
+<rect x='1260' y='374' width='110' height='158' fill='%238fb7c9'/>\
+</svg>");
       background-size:cover;
-      box-shadow:var(--shadow);
+      background-position:center;
+      opacity:.92;
+      transform:scale(1.02);
     }
-    .hero:before,.hero:after{content:"";position:absolute;border-radius:999px;pointer-events:none}
-    .hero:before{width:480px;height:480px;right:-120px;top:-80px;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 60%)}
-    .hero:after{width:360px;height:360px;left:-90px;bottom:-120px;background:radial-gradient(circle,rgba(255,255,255,.11),transparent 65%)}
-    .hero-inner{max-width:1320px;margin:0 auto;padding:26px 18px 28px;position:relative;z-index:1}
-    .hero-top{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:end}
-    .headline h1{margin:0;font-size:44px;line-height:1.02;letter-spacing:-.03em}
-    .headline p{margin:14px 0 0;max-width:760px;font-size:15px;opacity:.94}
-    .metrics{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-    .metric{padding:9px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16);font-size:12px}
+
+    .hero:after{
+      content:"";
+      position:absolute;
+      inset:auto 0 0 0;
+      height:190px;
+      background:linear-gradient(180deg,rgba(243,247,251,0),rgba(243,247,251,.72),#f3f7fb);
+    }
+
+    .hero-inner{
+      position:relative;
+      z-index:2;
+      padding-bottom:26px;
+    }
+
+    .topbar{
+      padding:20px 0 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      color:#fff;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:900;
+      font-size:22px;
+    }
+
+    .brand-mark{
+      width:40px;
+      height:40px;
+      border-radius:14px;
+      background:linear-gradient(135deg,#fff,#dff1ff);
+      display:grid;
+      place-items:center;
+      color:var(--blue);
+      font-weight:900;
+      box-shadow:var(--soft-shadow);
+    }
+
+    .nav{
+      display:flex;
+      gap:24px;
+      align-items:center;
+      font-weight:700;
+    }
+
+    .nav a{
+      color:#eef7ff;
+      text-decoration:none;
+      opacity:.92;
+    }
+
+    .nav a.active{
+      color:#fff;
+      position:relative;
+    }
+
+    .nav a.active:after{
+      content:"";
+      position:absolute;
+      left:0;right:0;bottom:-10px;
+      height:3px;
+      border-radius:999px;
+      background:#79a9ff;
+    }
+
+    .headline{
+      color:#fff;
+      max-width:720px;
+      padding-top:22px;
+    }
+
+    .headline h1{
+      margin:14px 0 0;
+      font-size:64px;
+      line-height:.95;
+      letter-spacing:-.05em;
+      text-shadow:0 12px 40px rgba(0,0,0,.15);
+    }
+
     .hero-grid{
-      display:grid;grid-template-columns:1fr 1fr;gap:12px;align-self:stretch;
-      min-height:250px;
+      margin-top:22px;
+      display:grid;
+      grid-template-columns:2.2fr 1fr;
+      gap:14px;
+      align-items:stretch;
     }
-    .shot{
-      border-radius:24px; overflow:hidden; position:relative;
-      box-shadow:0 18px 40px rgba(0,0,0,.16); border:1px solid rgba(255,255,255,.18);
-      min-height:120px;
+
+    .hero-main-card,.city-grid .city-card{
+      overflow:hidden;
+      border-radius:28px;
+      position:relative;
+      border:1px solid rgba(255,255,255,.26);
+      box-shadow:0 18px 40px rgba(20,34,48,.18);
+    }
+
+    .hero-main-card{
+      min-height:320px;
+      background:
+        linear-gradient(180deg,rgba(16,34,48,.08),rgba(16,34,48,.36)),
+        url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 700'>\
+<defs><linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'><stop stop-color='%23b9d9ff'/><stop offset='1' stop-color='%23ffe0b8'/></linearGradient></defs>\
+<rect width='1200' height='700' fill='url(%23sky)'/>\
+<path d='M0 455c102-28 198-26 309 14 89 32 132 74 220 74 92 0 140-42 216-43 62 0 117 20 211 20 84 0 146-16 244-40v220H0z' fill='%23d7eef4'/>\
+<path d='M782 157l58-112 58 112-116 0zm-54 234h224v20H728z' fill='%238f6548'/>\
+<path d='M776 157h128v234H776z' fill='%23b37a58'/>\
+<path d='M832 66h18v325h-18z' fill='%23765843'/>\
+</svg>");
+      background-size:cover;
+      background-position:center;
+    }
+
+    .hero-main-card .overlay,.city-card .overlay{
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg,rgba(10,20,30,.04),rgba(10,20,30,.42));
+    }
+
+    .hero-main-meta,.city-meta{
+      position:absolute;
+      left:18px;right:18px;bottom:18px;
+      color:#fff;
+      z-index:1;
+    }
+
+    .hero-main-meta .chip{
+      display:inline-flex;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.18);
+      backdrop-filter:blur(10px);
+      font-size:12px;
+      font-weight:700;
+      border:1px solid rgba(255,255,255,.18);
+    }
+
+    .hero-main-meta h2{
+      margin:12px 0 6px;
+      font-size:44px;
+      line-height:1;
+      letter-spacing:-.04em;
+    }
+
+    .city-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .city-card{min-height:153px}
+
+    .city-card.tokyo{
+      background:
+        linear-gradient(180deg,rgba(20,34,48,.08),rgba(20,34,48,.45)),
+        url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 700 500'>\
+<defs><linearGradient id='a' x1='0' y1='0' x2='0' y2='1'><stop stop-color='%23f4d5eb'/><stop offset='1' stop-color='%23dceaf8'/></linearGradient></defs>\
+<rect width='700' height='500' fill='url(%23a)'/>\
+<path d='M0 360c110-33 190-35 280 8 56 27 90 60 156 59 58 0 91-26 136-35 41-8 76-6 128 9v134H0z' fill='%23d7e5ef'/>\
+<path d='M438 120l42 78h-84l42-78z' fill='%23b56759'/><rect x='418' y='198' width='40' height='140' fill='%23ca8a72'/><rect x='394' y='338' width='88' height='18' fill='%23b56759'/>\
+<circle cx='134' cy='140' r='62' fill='%23f2bfdc'/>\
+</svg>");
       background-size:cover;background-position:center;
     }
-    .shot:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(2,8,23,.38))}
-    .shot b{position:absolute;left:16px;bottom:16px;z-index:1;font-size:15px}
-    .search-shell{
-      margin-top:20px; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.18);
-      border-radius:30px; padding:14px; backdrop-filter: blur(10px);
-    }
-    .search-grid{display:grid;grid-template-columns:1.1fr 1.1fr .8fr auto;gap:12px}
-    .field{
-      position:relative; background:#fff; color:var(--text); border-radius:20px;
-      padding:12px 14px 10px; min-height:74px; box-shadow:0 8px 22px rgba(2,8,23,.12);
-    }
-    .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700}
-    .field input{width:100%;border:none;outline:none;background:transparent;font-size:21px;font-weight:900;color:var(--text)}
-    .field input[type="date"]{font-size:18px}
-    .field small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
-    .search-btn{
-      border:none;border-radius:20px;background:#111827;color:#fff;font-size:16px;font-weight:900;
-      min-width:148px;cursor:pointer;box-shadow:var(--shadow)
-    }
-    .suggest{
-      display:none;position:absolute;left:0;right:0;top:79px;z-index:30;
-      background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 16px 40px rgba(15,23,42,.16);padding:6px;max-height:320px;overflow:auto
-    }
-    .suggest button{display:block;width:100%;text-align:left;border:none;background:transparent;padding:10px 12px;border-radius:14px;cursor:pointer}
-    .suggest button:hover{background:#f8fafc}
-    .s1{font-size:14px;font-weight:800}.s2{font-size:12px;color:var(--muted);margin-top:3px}
-    .page{max-width:1320px;margin:18px auto 32px;padding:0 18px;display:grid;grid-template-columns:290px 1fr;gap:18px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .sidebar{padding:16px}
-    .sidebar h3{margin:0 0 10px;font-size:14px}
-    .radio-list{display:flex;flex-direction:column;gap:10px;font-size:14px}
-    .radio-list label{display:flex;gap:8px;align-items:center;cursor:pointer}
-    .sidebar select{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:#fff}
-    .mini-gallery{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px}
-    .mini-card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
-    .mini-img{height:124px;background-size:cover;background-position:center}
-    .mini-body{padding:12px}
-    .mini-body b{font-size:14px}.mini-body div{font-size:12px;color:var(--muted);margin-top:4px}
-    .results{padding:16px}
-    .results-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-    .results-head b{font-size:20px}
-    .error{display:none;margin-bottom:12px;padding:10px 12px;border-radius:14px;background:#fff1f2;border:1px solid #fecdd3;color:var(--danger);font-size:13px;white-space:pre-wrap}
-    .list{display:flex;flex-direction:column;gap:14px}
-    .empty{display:none;text-align:center;color:var(--muted);padding:34px 12px}
-    .offer{
-      border:1px solid var(--line);border-radius:22px;padding:16px;display:grid;
-      grid-template-columns:1.5fr 1fr 160px;gap:16px;align-items:center;
+
+    .city-card.sydney{
       background:
-        radial-gradient(circle at 100% 0, rgba(24,160,182,.06), transparent 28%),
-        linear-gradient(180deg, rgba(15,114,131,.02), rgba(15,114,131,0) 100px), #fff;
+        linear-gradient(180deg,rgba(20,34,48,.08),rgba(20,34,48,.44)),
+        url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 700 500'>\
+<defs><linearGradient id='b' x1='0' y1='0' x2='0' y2='1'><stop stop-color='%23c2e1ff'/><stop offset='1' stop-color='%23ffd3b4'/></linearGradient></defs>\
+<rect width='700' height='500' fill='url(%23b)'/>\
+<path d='M0 366c110-23 166-10 262 22 75 25 122 31 194 23 65-8 118-26 244-20v109H0z' fill='%23bedde6'/>\
+<path d='M408 248c32-54 68-86 106-98-8 40-8 69 5 96-34-16-71-14-111 2z' fill='%23f5f9fb'/><path d='M483 244c19-32 39-53 62-63-5 25-4 45 4 64-20-10-41-10-66-1z' fill='%23eef4f7'/>\
+</svg>");
+      background-size:cover;background-position:center;
     }
-    .airline-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+
+    .city-card.bangkok{
+      background:
+        linear-gradient(180deg,rgba(20,34,48,.08),rgba(20,34,48,.45)),
+        url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 700 500'>\
+<defs><linearGradient id='c' x1='0' y1='0' x2='0' y2='1'><stop stop-color='%23ffd7b2'/><stop offset='1' stop-color='%23d8f0ff'/></linearGradient></defs>\
+<rect width='700' height='500' fill='url(%23c)'/>\
+<path d='M0 370c70-25 154-26 221 6 60 28 100 58 170 58 81 0 119-40 184-47 44-4 80 4 125 17v96H0z' fill='%23dce7ef'/>\
+<path d='M398 140l42-78 42 78h-84zm-50 180h184v20H348z' fill='%23b7774f'/><path d='M416 140h48v180h-48z' fill='%23d69f4c'/>\
+</svg>");
+      background-size:cover;background-position:center;
+    }
+
+    .city-card.newyork{
+      background:
+        linear-gradient(180deg,rgba(20,34,48,.08),rgba(20,34,48,.46)),
+        url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 700 500'>\
+<defs><linearGradient id='d' x1='0' y1='0' x2='0' y2='1'><stop stop-color='%23ffe3bc'/><stop offset='1' stop-color='%23b9d7ef'/></linearGradient></defs>\
+<rect width='700' height='500' fill='url(%23d)'/>\
+<path d='M0 378c100-24 167-20 263 18 75 29 121 35 195 24 57-8 113-25 242-16v96H0z' fill='%23d6e5ee'/>\
+<rect x='446' y='116' width='42' height='210' fill='%23637d98'/><rect x='392' y='172' width='44' height='154' fill='%2387a1b8'/><rect x='502' y='84' width='55' height='242' fill='%234d6888'/>\
+</svg>");
+      background-size:cover;background-position:center;
+    }
+
+    .city-meta b{display:block;font-size:17px}
+    .city-meta span{display:block;margin-top:4px;font-size:12px;color:#f1f7ff}
+
+    .search-panel{
+      margin-top:26px;
+      background:rgba(255,255,255,.86);
+      backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.55);
+      border-radius:28px;
+      box-shadow:var(--card-shadow);
+      overflow:hidden;
+    }
+
+    .search-tabs{
+      display:flex;
+      border-bottom:1px solid #eef3f7;
+      background:rgba(255,255,255,.72);
+    }
+
+    .search-tab{
+      padding:16px 22px;
+      font-weight:800;
+      color:#5c6d80;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      position:relative;
+    }
+
+    .search-tab.active{color:var(--blue)}
+    .search-tab.active:after{
+      content:"";
+      position:absolute;
+      left:18px;right:18px;bottom:0;
+      height:3px;border-radius:999px;background:var(--blue);
+    }
+
+    .search-form{padding:18px}
+
+    .search-row-1{
+      display:grid;
+      grid-template-columns:1fr 48px 1fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .swap{
+      border:none;
+      border-radius:18px;
+      background:#f3f7fb;
+      cursor:pointer;
+      font-size:20px;
+      font-weight:900;
+      color:#617487;
+    }
+
+    .search-row-2{
+      display:grid;
+      grid-template-columns:1fr 1fr 220px;
+      gap:12px;
+    }
+
+    .input-card{
+      position:relative;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px 16px 12px;
+      box-shadow:var(--soft-shadow);
+    }
+
+    .input-card label{
+      display:block;
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+
+    .input-card input{
+      width:100%;
+      border:none;
+      outline:none;
+      background:transparent;
+      font-size:18px;
+      font-weight:900;
+      color:var(--text);
+    }
+
+    .input-card small{
+      display:block;
+      margin-top:4px;
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .suggest{
+      display:none;
+      position:absolute;
+      left:0;right:0;top:78px;
+      z-index:30;
+      max-height:300px;
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 18px 40px rgba(20,34,48,.14);
+      padding:6px;
+    }
+
+    .suggest button{
+      display:block;
+      width:100%;
+      text-align:left;
+      border:none;
+      background:transparent;
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+    }
+
+    .suggest button:hover{background:#f7fafd}
+    .s1{font-weight:800;font-size:14px}
+    .s2{margin-top:3px;font-size:12px;color:var(--muted)}
+
+    .search-cta{
+      border:none;
+      border-radius:18px;
+      background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#fff;
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:0 14px 28px rgba(47,111,255,.28);
+    }
+
+    .section{margin-top:34px}
+    .section h2{margin:0 0 18px;font-size:24px;letter-spacing:-.02em}
+
+    .destinations{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+    }
+
+    .mini-dest{
+      overflow:hidden;
+      border-radius:22px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--soft-shadow);
+    }
+
+    .mini-img{
+      height:180px;
+      background-size:cover;
+      background-position:center;
+      position:relative;
+    }
+
+    .mini-img:after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.42));
+    }
+
+    .mini-meta{
+      position:absolute;
+      left:16px;right:16px;bottom:16px;
+      color:#fff;z-index:1;
+    }
+
+    .mini-meta b{display:block;font-size:20px}
+    .mini-meta span{display:block;margin-top:4px;font-size:12px}
+
+    .content{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:0 20px 34px;
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:18px;
+    }
+
+    .sidebar{display:flex;flex-direction:column;gap:14px}
+
+    .card{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--soft-shadow);
+    }
+
+    .filter-card{padding:16px}
+    .filter-card h3{margin:0 0 12px;font-size:14px}
+
+    .radio-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .radio-list label{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      cursor:pointer;
+    }
+
+    .filter-card select{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px 12px;
+      background:#fff;
+    }
+
+    .promo-card{overflow:hidden}
+
+    .promo-image{
+      height:160px;
+      background:
+        linear-gradient(180deg,rgba(16,34,48,.08),rgba(16,34,48,.35)),
+        url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 700 420'>\
+<defs><linearGradient id='p' x1='0' y1='0' x2='0' y2='1'><stop stop-color='%23c8e5ef'/><stop offset='1' stop-color='%23f7efe6'/></linearGradient></defs>\
+<rect width='700' height='420' fill='url(%23p)'/>\
+<path d='M0 308c78-35 135-39 218-10 64 22 97 54 159 54 72 0 110-34 167-39 43-4 76 2 156 25v82H0z' fill='%23dce7ed'/>\
+<path d='M466 126l54-95 54 95h-108z' fill='%23d69f4c'/><rect x='488' y='126' width='42' height='146' fill='%23b8735a'/><rect x='452' y='272' width='116' height='18' fill='%238d5b6b'/>\
+</svg>");
+      background-size:cover;
+      background-position:center;
+    }
+
+    .promo-body{padding:14px 16px 16px}
+    .promo-body b{display:block;font-size:16px}
+    .promo-body p{
+      margin:6px 0 0;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    .results.card{padding:16px}
+
+    .results-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .results-head b{font-size:20px}
+    .muted{font-size:12px;color:var(--muted)}
+
+    .error{
+      display:none;
+      margin-bottom:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:#fff1f2;
+      border:1px solid #fecdd3;
+      color:#b91c1c;
+      font-size:13px;
+      white-space:pre-wrap;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .empty{
+      display:none;
+      text-align:center;
+      color:var(--muted);
+      padding:34px 12px;
+    }
+
+    .offer{
+      display:grid;
+      grid-template-columns:1.55fr 1fr 170px;
+      gap:18px;
+      align-items:center;
+      padding:16px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:
+        linear-gradient(180deg,rgba(47,111,255,.025),rgba(47,111,255,0) 90px),
+        radial-gradient(circle at 100% 0, rgba(214,159,76,.06), transparent 28%),
+        #fff;
+    }
+
+    .airline-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:10px;
+    }
+
     .logo{
-      width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:16px;font-weight:900;
-      background:linear-gradient(135deg,#ecf7f8,#dff3f5);color:var(--brand2);border:1px solid #d8eef1
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,#eff6ff,#dbeafe);
+      color:var(--blue);
+      font-weight:900;
     }
+
     .airline-name{font-size:16px;font-weight:900}
-    .flight-no{font-size:12px;color:var(--muted);margin-top:3px}
-    .route-main{display:flex;align-items:center;gap:12px}
-    .time-block b{display:block;font-size:25px;line-height:1}
-    .time-block span{display:block;color:var(--muted);font-size:12px;margin-top:5px}
-    .route-line{flex:1;min-width:130px}
-    .route-line .line{height:2px;background:linear-gradient(90deg,#cbd5e1,#94a3b8,#cbd5e1);border-radius:999px}
-    .route-line .mid{text-align:center;color:var(--muted);font-size:12px;margin-top:7px}
-    .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-    .tag{display:inline-flex;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#f8fafc;font-size:12px;color:#334155}
-    .midcol .row{font-size:13px;color:#334155;margin:6px 0}.midcol .row b{color:#0f172a}
+    .flight-no{margin-top:3px;font-size:12px;color:var(--muted)}
+
+    .route-main{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .time-block b{
+      display:block;
+      font-size:26px;
+      line-height:1;
+    }
+
+    .time-block span{
+      display:block;
+      margin-top:5px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .route-line{
+      flex:1;
+      min-width:140px;
+    }
+
+    .route-line .line{
+      position:relative;
+      height:2px;
+      background:linear-gradient(90deg,#cdd7e1,#9bb0c4,#cdd7e1);
+      border-radius:999px;
+    }
+
+    .route-line .line:before,.route-line .line:after{
+      content:"";
+      position:absolute;
+      top:50%;
+      width:8px;height:8px;
+      background:#9bb0c4;
+      border-radius:999px;
+      transform:translateY(-50%);
+    }
+
+    .route-line .line:before{left:0}
+    .route-line .line:after{right:0}
+
+    .route-line .plane{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      background:#fff;
+      border:1px solid var(--line);
+      width:28px;height:28px;
+      border-radius:999px;
+      display:grid;place-items:center;
+      color:var(--blue);
+      font-size:12px;
+    }
+
+    .route-line .mid{
+      text-align:center;
+      margin-top:7px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .tag{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      font-size:12px;
+      color:#334155;
+    }
+
+    .midcol .row{
+      margin:6px 0;
+      font-size:13px;
+      color:#334155;
+    }
+
+    .midcol .row b{color:var(--text)}
+
     .price{text-align:right}
     .price .t{font-size:12px;color:var(--muted)}
-    .price .a{font-size:30px;line-height:1.04;font-weight:900;margin:4px 0}
+    .price .a{margin:4px 0;font-size:30px;line-height:1.04;font-weight:900}
     .price .h{font-size:12px;color:var(--muted)}
-    .price button{margin-top:12px;border:none;background:var(--brand);color:#fff;border-radius:14px;padding:12px 16px;font-weight:900;cursor:pointer;min-width:124px}
-    .price button:hover{background:var(--brand2)}
+
+    .price button{
+      margin-top:12px;
+      border:none;
+      border-radius:14px;
+      padding:12px 16px;
+      min-width:126px;
+      background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+
     @media (max-width:1100px){
-      .hero-top{grid-template-columns:1fr}
-      .search-grid{grid-template-columns:1fr 1fr}
-      .page{grid-template-columns:1fr}
+      .hero-grid{grid-template-columns:1fr}
+      .destinations{grid-template-columns:1fr 1fr}
+      .search-row-2{grid-template-columns:1fr 1fr}
+      .content{grid-template-columns:1fr}
       .offer{grid-template-columns:1fr}
       .price{text-align:left}
     }
-    @media (max-width:680px){
-      .headline h1{font-size:34px}
-      .search-grid{grid-template-columns:1fr}
-      .hero-grid{grid-template-columns:1fr}
+
+    @media (max-width:720px){
+      .headline h1{font-size:42px}
+      .search-row-1{grid-template-columns:1fr}
+      .search-row-2{grid-template-columns:1fr}
+      .destinations{grid-template-columns:1fr}
       .route-main{flex-direction:column;align-items:flex-start}
+      .nav{display:none}
     }
   </style>
 </head>
 <body>
   <section class="hero">
-    <div class="hero-inner">
-      <div class="hero-top">
-        <div class="headline">
-          <h1>让机票搜索更像<br>真正的旅行产品页</h1>
-          <p>这一版把配图、背景、信息层次都加厚了。不是冷冰冰一排输入框，而是更接近你给的目标图：大幅头图、目的地视觉块、清晰航班卡片、价格重点突出。</p>
-          <div class="metrics">
-            <div class="metric">城市 / 机场 / IATA 自动识别</div>
-            <div class="metric">航司 / 航班号 / 中转 / 价格</div>
-            <div class="metric">更丰富的配图与背景层次</div>
+    <div class="container hero-inner">
+      <div class="topbar">
+        <div class="brand"><div class="brand-mark">✈</div><div>ujui</div></div>
+        <nav class="nav">
+          <a class="active" href="#">Flights</a>
+          <a href="#">Hotels</a>
+          <a href="#">Car Rentals</a>
+          <a href="#">Tours</a>
+        </nav>
+      </div>
+
+      <div class="headline">
+        <h1>Flight Search</h1>
+      </div>
+
+      <div class="hero-grid">
+        <div class="hero-main-card">
+          <div class="overlay"></div>
+          <div class="hero-main-meta">
+            <span class="chip">Flights</span>
+            <h2>Popular Destinations</h2>
           </div>
         </div>
-        <div class="hero-grid">
-          <div class="shot" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 520%22><defs><linearGradient id=%22g%22 x1=%220%22 x2=%221%22><stop stop-color=%22%23d8eef4%22/><stop offset=%221%22 stop-color=%22%23ffffff%22/></linearGradient></defs><rect width=%22800%22 height=%22520%22 fill=%22url(%23g)%22/><path d=%22M0 370c114-57 206-69 319-46 116 23 173 85 289 85 77 0 132-24 192-49v160H0z%22 fill=%22%23d1ebf0%22/><path d=%22M301 177c115 17 191 50 280 120-113-31-210-37-330-18 53-42 72-70 50-102z%22 fill=%22%230f7283%22 opacity=%22.88%22/></svg>');"><b>Cover visual</b></div>
-          <div class="shot" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 520%22><rect width=%22800%22 height=%22520%22 fill=%22%23f5fbfd%22/><rect x=%2270%22 y=%2270%22 width=%22660%22 height=%22380%22 rx=%2240%22 fill=%22white%22 stroke=%22%23dbe8ef%22/><rect x=%22112%22 y=%22116%22 width=%22234%22 height=%2222%22 rx=%2211%22 fill=%22%230f7283%22 opacity=%22.88%22/><rect x=%22112%22 y=%22162%22 width=%22420%22 height=%2216%22 rx=%228%22 fill=%22%23dce7ee%22/><rect x=%22112%22 y=%22200%22 width=%22490%22 height=%2216%22 rx=%228%22 fill=%22%23edf3f7%22/><rect x=%22112%22 y=%22258%22 width=%22574%22 height=%2296%22 rx=%2222%22 fill=%22%23f9fcfd%22 stroke=%22%23e3eef4%22/></svg>');"><b>Readable flight card</b></div>
-          <div class="shot" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 520%22><defs><linearGradient id=%22x%22 x1=%220%22 x2=%221%22><stop stop-color=%22%230f7283%22/><stop offset=%221%22 stop-color=%22%2318a0b6%22/></linearGradient></defs><rect width=%22800%22 height=%22520%22 fill=%22url(%23x)%22/><circle cx=%22168%22 cy=%22244%22 r=%2240%22 fill=%22white%22 opacity=%22.95%22/><path d=%22M270 248h340%22 stroke=%22white%22 stroke-width=%228%22 stroke-linecap=%22round%22/><circle cx=%22420%22 cy=%22248%22 r=%228%22 fill=%22white%22/><circle cx=%22525%22 cy=%22248%22 r=%228%22 fill=%22white%22/></svg>');"><b>Timeline style</b></div>
-          <div class="shot" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 520%22><rect width=%22800%22 height=%22520%22 fill=%22%23eef9fb%22/><path d=%22M0 413c89-31 156-35 235-7 77 28 111 59 189 57 92-2 127-44 198-43 56 .6 102 20 178 10v90H0z%22 fill=%22%23d7eef3%22/><rect x=%2290%22 y=%22102%22 width=%22620%22 height=%22286%22 rx=%2234%22 fill=%22white%22 stroke=%22%23dce9ef%22/><rect x=%22130%22 y=%22140%22 width=%22170%22 height=%2219%22 rx=%229.5%22 fill=%22%2318a0b6%22 opacity=%22.82%22/><rect x=%22130%22 y=%22192%22 width=%22510%22 height=%2214%22 rx=%227%22 fill=%22%23e2e8f0%22/></svg>');"><b>Destination blocks</b></div>
+
+        <div class="city-grid">
+          <div class="city-card tokyo"><div class="overlay"></div><div class="city-meta"><b>Tokyo</b></div></div>
+          <div class="city-card sydney"><div class="overlay"></div><div class="city-meta"><b>Sydney</b></div></div>
+          <div class="city-card bangkok"><div class="overlay"></div><div class="city-meta"><b>Bangkok</b></div></div>
+          <div class="city-card newyork"><div class="overlay"></div><div class="city-meta"><b>New York</b></div></div>
         </div>
       </div>
 
-      <div class="search-shell">
-        <div class="search-grid">
-          <div class="field">
-            <label>From</label>
-            <input id="origin" placeholder="London / LON / Heathrow" autocomplete="off" />
-            <small>支持城市、机场、IATA</small>
-            <div id="originSuggest" class="suggest"></div>
+      <div class="search-panel">
+        <div class="search-tabs">
+          <div class="search-tab active">✈ Flights</div>
+          <div class="search-tab">🏨 Hotels</div>
+          <div class="search-tab">🚗 Car Rentals</div>
+          <div class="search-tab">🧭 Tours</div>
+        </div>
+
+        <div class="search-form">
+          <div class="search-row-1">
+            <div class="input-card">
+              <label>From</label>
+              <input id="origin" placeholder="Shanghai / SHA / London" autocomplete="off" />
+              <small id="originHint"></small>
+              <div id="originSuggest" class="suggest"></div>
+            </div>
+
+            <button class="swap" id="swapBtn" type="button">⇄</button>
+
+            <div class="input-card">
+              <label>To</label>
+              <input id="dest" placeholder="Los Angeles / LAX / Tokyo" autocomplete="off" />
+              <small id="destHint"></small>
+              <div id="destSuggest" class="suggest"></div>
+            </div>
           </div>
-          <div class="field">
-            <label>To</label>
-            <input id="dest" placeholder="New York / JFK / NYC" autocomplete="off" />
-            <small>支持城市、机场、IATA</small>
-            <div id="destSuggest" class="suggest"></div>
+
+          <div class="search-row-2">
+            <div class="input-card">
+              <label>Date</label>
+              <input id="depart" type="date" />
+              <small></small>
+            </div>
+
+            <div class="input-card">
+              <label>Travellers</label>
+              <input id="travellers" value="1 Adult · Economy" readonly />
+              <small></small>
+            </div>
+
+            <button class="search-cta" id="runSearch" type="button">Search</button>
           </div>
-          <div class="field">
-            <label>Date</label>
-            <input id="depart" type="date" />
-            <small>默认未来两周</small>
-          </div>
-          <button id="runSearch" class="search-btn">Search</button>
         </div>
       </div>
     </div>
   </section>
 
-  <main class="page">
-    <aside class="card sidebar">
-      <h3>Stops</h3>
-      <div id="stopsGroup" class="radio-list">
-        <label><input type="radio" name="stops" value="any" checked> Any</label>
-        <label><input type="radio" name="stops" value="0"> Direct</label>
-        <label><input type="radio" name="stops" value="1"> 1 stop max</label>
-        <label><input type="radio" name="stops" value="2"> 2 stops max</label>
+  <section class="container section">
+    <h2>Popular Destinations</h2>
+    <div class="destinations">
+      <div class="mini-dest"><div class="mini-img city-card tokyo"><div class="overlay"></div><div class="mini-meta"><b>Tokyo</b><span>From $349</span></div></div></div>
+      <div class="mini-dest"><div class="mini-img city-card bangkok"><div class="overlay"></div><div class="mini-meta"><b>Bangkok</b><span>From $279</span></div></div></div>
+      <div class="mini-dest"><div class="mini-img city-card sydney"><div class="overlay"></div><div class="mini-meta"><b>Singapore</b><span>From $329</span></div></div></div>
+      <div class="mini-dest"><div class="mini-img" style="position:relative;background:
+        linear-gradient(180deg,rgba(20,34,48,.08),rgba(20,34,48,.45)),
+        url('data:image/svg+xml;utf8,\
+<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 700 500%22><defs><linearGradient id=%22f%22 x1=%220%22 x2=%220%22 y1=%220%22 y2=%221%22><stop stop-color=%22%23ffe0ba%22/><stop offset=%221%22 stop-color=%22%23fff6ea%22/></linearGradient></defs><rect width=%22700%22 height=%22500%22 fill=%22url(%23f)%22/><path d=%22M0 390c84-26 145-25 223 10 64 28 106 47 176 46 92-2 131-37 204-43 35-3 57-1 97 11v86H0z%22 fill=%23ead8c5 /><ellipse cx=%22462%22 cy=%22253%22 rx=%22134%22 ry=%22108%22 fill=%23c99258 /><ellipse cx=%22464%22 cy=%22253%22 rx=%22102%22 ry=%2281%22 fill=%23f6e3c8 /><rect x=%22327%22 y=%22242%22 width=%22271%22 height=%2219%22 fill=%23c99258 /></svg>');
+        background-size:cover;background-position:center;"><div class="overlay"></div><div class="mini-meta"><b>Rome</b><span>From $399</span></div></div></div>
+    </div>
+  </section>
+
+  <section class="content">
+    <aside class="sidebar">
+      <div class="card filter-card">
+        <h3>Stops</h3>
+        <div id="stopsGroup" class="radio-list">
+          <label><input type="radio" name="stops" value="any" checked> Any</label>
+          <label><input type="radio" name="stops" value="0"> Direct</label>
+          <label><input type="radio" name="stops" value="1"> 1 stop max</label>
+          <label><input type="radio" name="stops" value="2"> 2 stops max</label>
+        </div>
+
+        <h3 style="margin-top:18px;">Sort by</h3>
+        <select id="sortBy">
+          <option value="cheapest">Cheapest first</option>
+          <option value="fastest">Fastest</option>
+        </select>
       </div>
 
-      <h3 style="margin-top:18px;">Sort by</h3>
-      <select id="sortBy">
-        <option value="cheapest">Cheapest first</option>
-        <option value="fastest">Fastest</option>
-      </select>
-
-      <div class="mini-gallery">
-        <div class="mini-card">
-          <div class="mini-img" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 700 400%22><defs><linearGradient id=%22g%22 x1=%220%22 x2=%221%22><stop stop-color=%22%23dbf0f4%22/><stop offset=%221%22 stop-color=%22%23ffffff%22/></linearGradient></defs><rect width=%22700%22 height=%22400%22 fill=%22url(%23g)%22/><path d=%22M0 287c82-42 154-52 232-27 84 27 114 67 196 65 78-2 121-34 170-36 32-2 57 5 102-6v117H0z%22 fill=%22%23cfeaf0%22/><path d=%22M275 145c94 15 147 41 217 99-88-23-163-27-255-13 31-23 61-54 38-86z%22 fill=%22%230f7283%22 opacity=%22.85%22/></svg>');"></div>
-          <div class="mini-body"><b>Hero cover</b><div>更丰富的背景，不再像空白表单</div></div>
-        </div>
-        <div class="mini-card">
-          <div class="mini-img" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 700 400%22><rect width=%22700%22 height=%22400%22 fill=%22%23eef9fb%22/><rect x=%2280%22 y=%2270%22 width=%22540%22 height=%22260%22 rx=%2232%22 fill=%22white%22 stroke=%22%23deebf1%22/><rect x=%22120%22 y=%22110%22 width=%22220%22 height=%2218%22 rx=%229%22 fill=%22%2318a0b6%22 opacity=%22.86%22/><rect x=%22120%22 y=%22160%22 width=%22410%22 height=%2214%22 rx=%227%22 fill=%22%23e4ebf0%22/><rect x=%22120%22 y=%22202%22 width=%22350%22 height=%2214%22 rx=%227%22 fill=%22%23d6e4ec%22/></svg>');"></div>
-          <div class="mini-body"><b>Product-like card</b><div>更接近你想要的 Trip 风格</div></div>
+      <div class="card promo-card">
+        <div class="promo-image"></div>
+        <div class="promo-body">
+          <b>Recommended Flight Routes</b>
+          <p>Shanghai → Tokyo<br>Beijing → Bangkok<br>New York → London<br>Los Angeles → Singapore</p>
         </div>
       </div>
-
-      <div class="muted" style="margin-top:14px;">这一版主要提升观感与层次。如果你还想更花，可以下一步再加真正目的地照片、航司 logo 素材、价格趋势图。</div>
     </aside>
 
     <section class="card results">
@@ -222,10 +856,10 @@
       <div id="list" class="list"></div>
       <div id="empty" class="empty">No flights found</div>
     </section>
-  </main>
+  </section>
 
 <script>
-  var originEl, destEl, departEl, originSuggest, destSuggest;
+  var originEl, destEl, departEl, originSuggest, destSuggest, originHint, destHint;
   var state = { rawOffers: [], visibleOffers: [], stopsFilter: "any", sortBy: "cheapest" };
 
   function init() {
@@ -234,19 +868,23 @@
     departEl = document.getElementById("depart");
     originSuggest = document.getElementById("originSuggest");
     destSuggest = document.getElementById("destSuggest");
+    originHint = document.getElementById("originHint");
+    destHint = document.getElementById("destHint");
+
     var d = new Date();
     d.setDate(d.getDate() + 14);
     departEl.value = d.toISOString().slice(0, 10);
+
     bindControls();
     bindSelect();
   }
 
   function escapeHtml(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
   function fmtTime(v){if(!v)return"—";if(typeof v==="string"&&v.indexOf("T")>-1&&v.length>=16)return v.slice(11,16);var d=new Date(v);if(isNaN(d.getTime()))return"—";return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
-  function formatDuration(v){if(!v)return"";if(typeof v==="number"&&isFinite(v)){var h=Math.floor(v/60),m=v%60;return h+"h "+String(m).padStart(2,"0")+"m"}if(typeof v==="string"){var x=v.match(/^PT(?:(\d+)H)?(?:(\d+)M)?$/i);if(x){var hh=x[1]?Number(x[1]):0;var mm=x[2]?Number(x[2]):0;return (hh?hh+"h ":"")+(mm?mm+"m":"")}return v}return""}
+  function formatDuration(v){if(!v)return"";if(typeof v==="number"&&isFinite(v)){var h=Math.floor(v/60),m=v%60;return h+"h "+String(m).padStart(2,"0")+"m"}if(typeof v==="string"){var x=v.match(/^PT(?:(\\d+)H)?(?:(\\d+)M)?$/i);if(x){var hh=x[1]?Number(x[1]):0;var mm=x[2]?Number(x[2]):0;return (hh?hh+"h ":"")+(mm?mm+"m":"")}return v}return""}
   function money(c,t){if(t==null||!isFinite(Number(t)))return(c||"EUR")+" —";return(c||"EUR")+" "+Number(t).toFixed(2)}
   function stopsText(n){if(n===0)return"Direct";if(n===1)return"1 stop";return n+" stops"}
-  function logoText(name){name=String(name||"AL");return name.split(/\s+/).slice(0,2).map(function(x){return x[0]||""}).join("").slice(0,2).toUpperCase()}
+  function logoText(name){name=String(name||"AL");return name.split(/\\s+/).slice(0,2).map(function(x){return x[0]||""}).join("").slice(0,2).toUpperCase()}
   function getSegments(o){if(Array.isArray(o.segments)&&o.segments.length)return o.segments;var it0=(o.itineraries||[])[0]||{};return it0.segments||[]}
   function getAirline(o,segs){return o.airline||o.airlineName||o.carrierName||(o.carriers&&o.carriers[0]&&(o.carriers[0].name||o.carriers[0].code))||(segs[0]&&(segs[0].carrierName||segs[0].airline||segs[0].carrierCode))||"Airline"}
   function getFromCode(o,segs){return o.from||o.origin||o.originLocationCode||(segs[0]&&(segs[0].fromCode||segs[0].from||(segs[0].departure&&segs[0].departure.iataCode)))||"—"}
@@ -256,7 +894,7 @@
   function getCurrency(o){return (o.price&&o.price.currency)||o.currency||"EUR"}
   function computeMetrics(o){var segs=getSegments(o);var stops=typeof o.stops==="number"?o.stops:Math.max(0,segs.length-1);var dep=o.departAt||o.departureAt||o.departTime||(segs[0]&&((segs[0].departure&&segs[0].departure.at)||segs[0].departAt));var arr=o.arriveAt||o.arrivalAt||o.arriveTime||(segs[segs.length-1]&&((segs[segs.length-1].arrival&&segs[segs.length-1].arrival.at)||segs[segs.length-1].arriveAt));return{stops:stops,dep:dep,arr:arr}}
 
-  function render() {
+  function render(){
     var list=document.getElementById("list"), empty=document.getElementById("empty");
     list.innerHTML="";
     var items=state.rawOffers.slice();
@@ -282,8 +920,7 @@
       var segs=getSegments(o), m=computeMetrics(o);
       var from=getFromCode(o,segs), to=getToCode(o,segs), airline=getAirline(o,segs);
       var flightNumbers=getFlightNumbers(o,segs), totalPrice=getTotalPrice(o), currency=getCurrency(o);
-      var duration=o.durationText||formatDuration(o.durationMinutes)||formatDuration(o.duration)||"";
-      var vias=[];
+      var duration=o.durationText||formatDuration(o.durationMinutes)||formatDuration(o.duration)||"", vias=[];
       if(segs.length>1){
         for(var j=0;j<segs.length-1;j++){
           var viaCode=segs[j].toCode||segs[j].to||(segs[j].arrival&&segs[j].arrival.iataCode)||"";
@@ -301,7 +938,7 @@
           '</div>'+
           '<div class="route-main">'+
             '<div class="time-block"><b>'+fmtTime(m.dep)+'</b><span>'+escapeHtml(from)+'</span></div>'+
-            '<div class="route-line"><div class="line"></div><div class="mid">'+escapeHtml(duration||"")+' · '+stopsText(m.stops)+'</div></div>'+
+            '<div class="route-line"><div class="line"><div class="plane">✈</div></div><div class="mid">'+escapeHtml(duration||"")+' · '+stopsText(m.stops)+'</div></div>'+
             '<div class="time-block"><b>'+fmtTime(m.arr)+'</b><span>'+escapeHtml(to)+'</span></div>'+
           '</div>'+
           '<div class="meta">'+
@@ -343,28 +980,33 @@
     throw new Error("Could not resolve location: "+v);
   }
 
-  function buildSuggestButton(item,inputEl,suggestBox){
+  function buildSuggestButton(item,inputEl,suggestBox,hintEl){
     var btn=document.createElement("button");
     var title=(item.name||item.city||"Unknown")+" ("+(item.iataCode||"—")+")";
     var sub=[item.type,item.city,item.country].filter(Boolean).join(" · ");
     btn.innerHTML='<div class="s1">'+escapeHtml(title)+'</div>'+(sub?('<div class="s2">'+escapeHtml(sub)+'</div>'):'');
-    btn.onclick=function(){ inputEl.value=item.iataCode||""; suggestBox.style.display="none"; };
+    btn.onclick=function(){
+      inputEl.value=item.iataCode||"";
+      if(hintEl){hintEl.textContent=(item.name||"")+(item.city?(" · "+item.city):"")}
+      suggestBox.style.display="none";
+    };
     return btn;
   }
 
-  function attachSuggest(inputEl,suggestBox){
+  function attachSuggest(inputEl,suggestBox,hintEl){
     var timeout;
     inputEl.addEventListener("input",function(){
       clearTimeout(timeout);
       var q=(inputEl.value||"").trim();
       if(q.length<2){ suggestBox.style.display="none"; return; }
+
       timeout=setTimeout(function(){
         fetch("/api/locations/search?keyword="+encodeURIComponent(q))
           .then(function(r){ return r.json().then(function(data){ return {ok:r.ok,data:data}; }); })
           .then(function(result){
             if(!result.ok||!Array.isArray(result.data)||result.data.length===0){ suggestBox.style.display="none"; return; }
             suggestBox.innerHTML="";
-            result.data.forEach(function(item){ suggestBox.appendChild(buildSuggestButton(item,inputEl,suggestBox)); });
+            result.data.forEach(function(item){ suggestBox.appendChild(buildSuggestButton(item,inputEl,suggestBox,hintEl)); });
             suggestBox.style.display="block";
           })
           .catch(function(){ suggestBox.style.display="none"; });
@@ -385,7 +1027,8 @@
       var originCode=await resolveIata(originRaw);
       var destCode=await resolveIata(destRaw);
 
-      originEl.value=originCode; destEl.value=destCode;
+      originEl.value=originCode;
+      destEl.value=destCode;
       document.getElementById("resolvedInfo").textContent="Resolved: "+originRaw+" → "+originCode+" · "+destRaw+" → "+destCode;
 
       var res=await fetch("/api/flights/search",{
@@ -410,8 +1053,12 @@
     });
     document.getElementById("sortBy").addEventListener("change",function(e){ state.sortBy=e.target.value; render(); });
     document.getElementById("runSearch").addEventListener("click",doSearch);
-    attachSuggest(originEl,originSuggest);
-    attachSuggest(destEl,destSuggest);
+    document.getElementById("swapBtn").addEventListener("click",function(){
+      var a=originEl.value,b=destEl.value,ah=originHint.textContent,bh=destHint.textContent;
+      originEl.value=b; destEl.value=a; originHint.textContent=bh; destHint.textContent=ah;
+    });
+    attachSuggest(originEl,originSuggest,originHint);
+    attachSuggest(destEl,destSuggest,destHint);
   }
 
   function bindSelect(){
