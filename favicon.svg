@@ -1,0 +1,83 @@
+type AnyObj = Record<string, any>
+
+function fmtDuration(iso?: string): string {
+  if (!iso || typeof iso !== 'string') return ''
+  const m = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?$/i)
+  if (!m) return iso
+  const h = m[1] ? Number(m[1]) : 0
+  const min = m[2] ? Number(m[2]) : 0
+  return `${h ? h + 'h ' : ''}${min ? min + 'm' : ''}`.trim()
+}
+
+function toMinutes(iso?: string): number | null {
+  if (!iso || typeof iso !== 'string') return null
+  const m = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?$/i)
+  if (!m) return null
+  const h = m[1] ? Number(m[1]) : 0
+  const min = m[2] ? Number(m[2]) : 0
+  return h * 60 + min
+}
+
+export function normalizeOffers(payload: any) {
+  const offers = Array.isArray(payload?.data) ? payload.data : []
+  const carriers: AnyObj = payload?.dictionaries?.carriers || {}
+
+  return offers.map((offer: any, idx: number) => {
+    const itinerary = (offer?.itineraries || [])[0] || {}
+    const segments = Array.isArray(itinerary?.segments) ? itinerary.segments : []
+
+    const first = segments[0] || {}
+    const last = segments[segments.length - 1] || {}
+
+    const airlineCode =
+      (offer?.validatingAirlineCodes && offer.validatingAirlineCodes[0]) ||
+      first?.carrierCode ||
+      ''
+
+    const airlineName = carriers[airlineCode] || airlineCode || 'Airline'
+
+    const normalizedSegments = segments.map((seg: any) => {
+      const carrierCode = seg?.carrierCode || ''
+      const number = seg?.number || ''
+      return {
+        from: seg?.departure?.iataCode || '',
+        to: seg?.arrival?.iataCode || '',
+        departureAt: seg?.departure?.at || '',
+        arrivalAt: seg?.arrival?.at || '',
+        carrierCode,
+        number,
+        flightNumber: `${carrierCode}${number}`.trim()
+      }
+    })
+
+    const flightNumbers = normalizedSegments
+      .map((s: any) => s.flightNumber)
+      .filter(Boolean)
+
+    return {
+      id: String(offer?.id || idx),
+      airline: airlineName,
+      airlineCode,
+      from: first?.departure?.iataCode || '',
+      to: last?.arrival?.iataCode || '',
+      departAt: first?.departure?.at || '',
+      arriveAt: last?.arrival?.at || '',
+      stops: Math.max(0, normalizedSegments.length - 1),
+      duration: itinerary?.duration || '',
+      durationText: fmtDuration(itinerary?.duration),
+      durationMinutes: toMinutes(itinerary?.duration),
+      flightNumbers,
+      flightNumbersText: flightNumbers.join(', '),
+      travelClass:
+        first?.cabin ||
+        offer?.travelerPricings?.[0]?.fareDetailsBySegment?.[0]?.cabin ||
+        'ECONOMY',
+      price: {
+        currency: offer?.price?.currency || 'EUR',
+        total: Number(offer?.price?.grandTotal || offer?.price?.total || offer?.price?.base || 0)
+      },
+      segments: normalizedSegments,
+      raw: offer
+    }
+  })
+}

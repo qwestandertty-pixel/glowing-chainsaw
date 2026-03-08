@@ -1,0 +1,12 @@
+{
+  "name": "flight-search-vercel",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/node": "^3.2.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.12",
+    "typescript": "^5.5.4"
+  }
+}

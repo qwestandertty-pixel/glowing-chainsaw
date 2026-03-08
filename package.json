@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flights</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <style>
+    :root{
+      --bg:#f3f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --brand:#0f7283;
+      --brand2:#0a5a67;
+      --accent:#18a0b6;
+      --danger:#b91c1c;
+      --shadow:0 10px 30px rgba(15,23,42,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(18,160,182,.12), transparent 30%),
+        radial-gradient(circle at 85% 10%, rgba(15,114,131,.10), transparent 28%),
+        linear-gradient(180deg, #eaf6f7 0px, #f4f7fb 220px, #f4f7fb 100%);
+    }
+    .hero{
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff;
+      min-height:340px;
+      box-shadow:var(--shadow);
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:auto -80px -90px auto;
+      width:420px; height:420px; border-radius:999px;
+      background:radial-gradient(circle, rgba(255,255,255,.16), transparent 60%);
+      pointer-events:none;
+    }
+    .hero:after{
+      content:"";
+      position:absolute; left:-120px; top:-120px;
+      width:360px; height:360px; border-radius:999px;
+      background:radial-gradient(circle, rgba(255,255,255,.10), transparent 65%);
+      pointer-events:none;
+    }
+    .hero-inner{
+      max-width:1280px;
+      margin:0 auto;
+      padding:26px 18px 30px;
+      position:relative;
+      z-index:1;
+    }
+    .hero-top{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:18px; flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .brand h1{
+      margin:0; font-size:32px; line-height:1.05; letter-spacing:-.02em;
+    }
+    .brand p{
+      margin:10px 0 0; font-size:14px; opacity:.92; max-width:780px;
+    }
+    .hero-art{
+      width:320px; max-width:100%;
+      align-self:flex-end;
+      filter:drop-shadow(0 18px 28px rgba(0,0,0,.18));
+    }
+    .search-shell{
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:28px;
+      padding:14px;
+      backdrop-filter: blur(10px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .search-grid{
+      display:grid;
+      grid-template-columns: 1.1fr 1.1fr .8fr auto;
+      gap:12px;
+      align-items:stretch;
+    }
+    .field{
+      position:relative;
+      background:#fff;
+      color:var(--text);
+      border-radius:20px;
+      padding:12px 14px 10px;
+      box-shadow:0 6px 20px rgba(2,8,23,.10);
+      min-height:72px;
+    }
+    .field label{
+      display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600;
+    }
+    .field input{
+      width:100%; border:none; outline:none; font-size:20px; font-weight:800; color:var(--text); background:transparent;
+    }
+    .field input[type="date"]{font-size:18px}
+    .field small{display:block; color:var(--muted); font-size:11px; margin-top:4px}
+    .search-btn{
+      border:none; border-radius:20px; padding:0 22px;
+      background:#111827; color:#fff; font-size:16px; font-weight:800; cursor:pointer;
+      min-width:140px; box-shadow:var(--shadow);
+    }
+    .search-btn:hover{background:#0b1220}
+    .suggest{
+      display:none; position:absolute; left:0; right:0; top:78px;
+      background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:0 16px 42px rgba(15,23,42,.16);
+      max-height:320px; overflow:auto; z-index:30; padding:6px;
+    }
+    .suggest button{
+      display:block; width:100%; text-align:left; border:none; background:transparent; cursor:pointer;
+      padding:10px 12px; border-radius:14px;
+    }
+    .suggest button:hover{background:#f8fafc}
+    .s1{font-weight:800; font-size:14px; color:#0f172a}
+    .s2{font-size:12px; color:var(--muted); margin-top:3px}
+    .page{
+      max-width:1280px; margin:18px auto 32px; padding:0 18px;
+      display:grid; grid-template-columns:280px 1fr; gap:18px;
+    }
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+    }
+    .sidebar{padding:16px}
+    .sidebar h3{margin:0 0 10px; font-size:14px}
+    .radio-list{display:flex; flex-direction:column; gap:10px; font-size:14px}
+    .radio-list label{display:flex; align-items:center; gap:8px; cursor:pointer}
+    .sidebar select{
+      width:100%; border:1px solid var(--line); border-radius:14px; padding:11px 12px; background:#fff;
+      font-size:14px;
+    }
+    .muted{color:var(--muted); font-size:12px}
+    .results{padding:16px}
+    .results-head{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap;
+    }
+    .results-head b{font-size:20px}
+    .error{
+      display:none; margin-bottom:12px; padding:10px 12px; font-size:13px; border-radius:14px;
+      background:#fff1f2; border:1px solid #fecdd3; color:var(--danger); white-space:pre-wrap;
+    }
+    .empty{display:none; text-align:center; color:var(--muted); padding:34px 12px}
+    .list{display:flex; flex-direction:column; gap:14px}
+    .offer{
+      border:1px solid var(--line); border-radius:20px; padding:16px;
+      display:grid; grid-template-columns:1.4fr 1fr 150px; gap:18px; align-items:center;
+      background:
+        linear-gradient(180deg, rgba(15,114,131,.02), rgba(15,114,131,0) 80px),
+        #fff;
+    }
+    .airline-row{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      display:grid; place-items:center; font-size:16px; font-weight:800;
+      background:linear-gradient(135deg,#ebf7f8,#dff3f5); color:var(--brand2); border:1px solid #d8eef1;
+      flex:0 0 auto;
+    }
+    .airline-name{font-size:16px; font-weight:900}
+    .flight-no{font-size:12px; color:var(--muted); margin-top:3px}
+    .route-main{display:flex; align-items:center; gap:12px; margin-top:6px}
+    .time-block b{display:block; font-size:24px; line-height:1}
+    .time-block span{display:block; color:var(--muted); font-size:12px; margin-top:5px}
+    .route-line{flex:1; position:relative; min-width:120px}
+    .route-line .line{
+      height:2px; background:linear-gradient(90deg,#cbd5e1,#94a3b8,#cbd5e1); border-radius:999px;
+    }
+    .route-line .mid{
+      text-align:center; color:var(--muted); font-size:12px; margin-top:6px;
+    }
+    .meta{
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px; border:1px solid var(--line);
+      background:#f8fafc; color:#334155; font-size:12px;
+    }
+    .middle-col{min-width:180px}
+    .middle-col .row{font-size:13px; color:#334155; margin:6px 0}
+    .middle-col .row b{color:#0f172a}
+    .price-col{text-align:right}
+    .price-col .label{font-size:12px; color:var(--muted)}
+    .price-col .amount{font-size:28px; font-weight:900; line-height:1.05; margin:4px 0}
+    .price-col .hint{font-size:12px; color:var(--muted)}
+    .price-col button{
+      margin-top:12px; border:none; background:var(--brand); color:#fff; border-radius:14px;
+      padding:12px 16px; font-weight:900; cursor:pointer; min-width:120px;
+    }
+    .price-col button:hover{background:var(--brand2)}
+    .gallery{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px;
+    }
+    .gcard{
+      border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;
+    }
+    .gimg{
+      height:110px; background-size:cover; background-position:center;
+    }
+    .gmeta{padding:10px}
+    .gmeta b{font-size:13px}
+    .gmeta div{font-size:12px; color:var(--muted); margin-top:3px}
+    @media (max-width: 1080px){
+      .search-grid{grid-template-columns:1fr 1fr}
+      .search-btn{min-height:62px}
+      .page{grid-template-columns:1fr}
+      .offer{grid-template-columns:1fr}
+      .price-col{text-align:left}
+    }
+    @media (max-width: 640px){
+      .search-grid{grid-template-columns:1fr}
+      .route-main{flex-direction:column; align-items:flex-start}
+      .gallery{grid-template-columns:1fr}
+      .hero-art{display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-top">
+        <div class="brand">
+          <h1>Search flights<br>the comfortable way</h1>
+          <p>城市名、机场名、IATA 三字码都能搜。界面会自动补全，结果页展示航司、航班号、时间、中转、价格，尽量接近你要的 OTA 感觉。</p>
+        </div>
+        <svg class="hero-art" viewBox="0 0 420 260" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="30" y="28" width="360" height="204" rx="28" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.16)"/>
+          <rect x="62" y="62" width="180" height="16" rx="8" fill="rgba(255,255,255,.18)"/>
+          <rect x="62" y="92" width="138" height="12" rx="6" fill="rgba(255,255,255,.12)"/>
+          <rect x="62" y="132" width="296" height="70" rx="18" fill="rgba(255,255,255,.92)"/>
+          <circle cx="96" cy="167" r="18" fill="#dff3f5"/>
+          <rect x="124" y="150" width="112" height="10" rx="5" fill="#cbd5e1"/>
+          <rect x="124" y="168" width="168" height="10" rx="5" fill="#e2e8f0"/>
+          <rect x="306" y="150" width="36" height="16" rx="8" fill="#0f7283"/>
+          <path d="M348 84L287 104L244 95L273 121L257 155L288 133L315 150L306 118L348 84Z" fill="#ffffff"/>
+        </svg>
+      </div>
+
+      <div class="search-shell">
+        <div class="search-grid">
+          <div class="field">
+            <label>From</label>
+            <input id="origin" placeholder="London / LON / Heathrow" autocomplete="off" />
+            <small>支持城市、机场、IATA</small>
+            <div id="originSuggest" class="suggest"></div>
+          </div>
+
+          <div class="field">
+            <label>To</label>
+            <input id="dest" placeholder="New York / JFK / NYC" autocomplete="off" />
+            <small>支持城市、机场、IATA</small>
+            <div id="destSuggest" class="suggest"></div>
+          </div>
+
+          <div class="field">
+            <label>Date</label>
+            <input id="depart" type="date" />
+            <small>默认未来两周</small>
+          </div>
+
+          <button id="runSearch" class="search-btn">Search</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+    <aside class="card sidebar">
+      <h3>Stops</h3>
+      <div id="stopsGroup" class="radio-list">
+        <label><input type="radio" name="stops" value="any" checked> Any</label>
+        <label><input type="radio" name="stops" value="0"> Direct</label>
+        <label><input type="radio" name="stops" value="1"> 1 stop max</label>
+        <label><input type="radio" name="stops" value="2"> 2 stops max</label>
+      </div>
+
+      <h3 style="margin-top:18px;">Sort by</h3>
+      <select id="sortBy">
+        <option value="cheapest">Cheapest first</option>
+        <option value="fastest">Fastest</option>
+      </select>
+
+      <div class="gallery">
+        <div class="gcard">
+          <div class="gimg" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 500 300%22><defs><linearGradient id=%22g%22 x1=%220%22 x2=%221%22 y1=%220%22 y2=%221%22><stop stop-color=%22%23d9f0f4%22/><stop offset=%221%22 stop-color=%22%23f8fbfd%22/></linearGradient></defs><rect width=%22500%22 height=%22300%22 fill=%22url(%23g)%22/><path d=%22M0 214c60-34 91-40 145-29 55 11 79 41 133 38 56-2 89-27 123-24 31 3 57 18 99 15v86H0z%22 fill=%22%23c8e8ee%22/><path d=%22M170 74c70 8 117 30 170 69-71-19-126-18-206-7 38-31 66-48 36-62z%22 fill=%22%230f7283%22 opacity=%22.88%22/></svg>');"></div>
+          <div class="gmeta"><b>Flexible city input</b><div>自动城市补全</div></div>
+        </div>
+        <div class="gcard">
+          <div class="gimg" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 500 300%22><rect width=%22500%22 height=%22300%22 fill=%22%23eef8fb%22/><rect x=%2260%22 y=%2260%22 width=%22380%22 height=%22180%22 rx=%2228%22 fill=%22white%22 stroke=%22%23d9e8ef%22/><rect x=%2290%22 y=%2294%22 width=%22150%22 height=%2216%22 rx=%228%22 fill=%22%230f7283%22 opacity=%22.9%22/><rect x=%2290%22 y=%22130%22 width=%22250%22 height=%2211%22 rx=%225.5%22 fill=%22%23e2e8f0%22/><rect x=%2290%22 y=%22156%22 width=%22300%22 height=%2211%22 rx=%225.5%22 fill=%22%23cbd5e1%22/></svg>');"></div>
+          <div class="gmeta"><b>Readable results</b><div>航司、航班号、价格</div></div>
+        </div>
+        <div class="gcard">
+          <div class="gimg" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 500 300%22><defs><linearGradient id=%22g2%22 x1=%220%22 x2=%221%22 y1=%220%22 y2=%221%22><stop stop-color=%22%230f7283%22/><stop offset=%221%22 stop-color=%22%2318a0b6%22/></linearGradient></defs><rect width=%22500%22 height=%22300%22 fill=%22url(%23g2)%22/><circle cx=%22108%22 cy=%22145%22 r=%2226%22 fill=%22white%22 opacity=%22.95%22/><path d=%22M178 149h188%22 stroke=%22white%22 stroke-width=%226%22 stroke-linecap=%22round%22/><circle cx=%22352%22 cy=%22149%22 r=%226%22 fill=%22white%22/><circle cx=%22260%22 cy=%22149%22 r=%226%22 fill=%22white%22/></svg>');"></div>
+          <div class="gmeta"><b>Closer to OTA</b><div>更接近你要的效果</div></div>
+        </div>
+      </div>
+
+      <div class="muted" style="margin-top:14px;">如果你继续要更像 Trip 的版式，下一步可以再加航司 logo、票规、行李额、更多配图模块。</div>
+    </aside>
+
+    <section class="card results">
+      <div class="results-head">
+        <div>
+          <b id="summary">0 results</b>
+          <div class="muted" id="resolvedInfo" style="margin-top:4px;"></div>
+        </div>
+      </div>
+      <div id="error" class="error"></div>
+      <div id="list" class="list"></div>
+      <div id="empty" class="empty">No flights found</div>
+    </section>
+  </div>
+
+<script>
+  var originEl, destEl, departEl, originSuggest, destSuggest;
+  var state = {
+    rawOffers: [],
+    visibleOffers: [],
+    stopsFilter: "any",
+    sortBy: "cheapest"
+  };
+
+  function init() {
+    originEl = document.getElementById("origin");
+    destEl = document.getElementById("dest");
+    departEl = document.getElementById("depart");
+    originSuggest = document.getElementById("originSuggest");
+    destSuggest = document.getElementById("destSuggest");
+
+    var d = new Date();
+    d.setDate(d.getDate() + 14);
+    departEl.value = d.toISOString().slice(0, 10);
+
+    bindControls();
+    bindSelect();
+  }
+
+  function escapeHtml(v) {
+    return String(v == null ? "" : v)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function fmtTime(v) {
+    if (!v) return "—";
+    if (typeof v === "string" && v.indexOf("T") > -1 && v.length >= 16) return v.slice(11, 16);
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return "—";
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+
+  function formatDuration(v) {
+    if (!v) return "";
+    if (typeof v === "number" && isFinite(v)) {
+      var h = Math.floor(v / 60), m = v % 60;
+      return h + "h " + String(m).padStart(2, "0") + "m";
+    }
+    if (typeof v === "string") {
+      var m = v.match(/^PT(?:(\d+)H)?(?:(\d+)M)?$/i);
+      if (m) {
+        var hh = m[1] ? Number(m[1]) : 0;
+        var mm = m[2] ? Number(m[2]) : 0;
+        return (hh ? hh + "h " : "") + (mm ? mm + "m" : "");
+      }
+      return v;
+    }
+    return "";
+  }
+
+  function money(currency, total) {
+    if (total == null || !isFinite(Number(total))) return (currency || "EUR") + " —";
+    return (currency || "EUR") + " " + Number(total).toFixed(2);
+  }
+
+  function stopsText(n) {
+    if (n === 0) return "Direct";
+    if (n === 1) return "1 stop";
+    return n + " stops";
+  }
+
+  function logoText(name) {
+    name = String(name || "AL");
+    return name.split(/\s+/).slice(0,2).map(function(x){return x[0] || ""}).join("").slice(0,2).toUpperCase();
+  }
+
+  function getSegments(o) {
+    if (Array.isArray(o.segments) && o.segments.length) return o.segments;
+    var it0 = (o.itineraries || [])[0] || {};
+    return it0.segments || [];
+  }
+
+  function getAirline(o, segs) {
+    return o.airline || o.airlineName || o.carrierName ||
+      (o.carriers && o.carriers[0] && (o.carriers[0].name || o.carriers[0].code)) ||
+      (segs[0] && (segs[0].carrierName || segs[0].airline || segs[0].carrierCode)) ||
+      "Airline";
+  }
+
+  function getFromCode(o, segs) {
+    return o.from || o.origin || o.originLocationCode ||
+      (segs[0] && (segs[0].fromCode || segs[0].from || (segs[0].departure && segs[0].departure.iataCode))) ||
+      "—";
+  }
+
+  function getToCode(o, segs) {
+    var last = segs[segs.length - 1];
+    return o.to || o.destination || o.destinationLocationCode ||
+      (last && (last.toCode || last.to || (last.arrival && last.arrival.iataCode))) ||
+      "—";
+  }
+
+  function getFlightNumbers(o, segs) {
+    if (o.flightNumbersText) return o.flightNumbersText;
+    if (o.flightNumber) return o.flightNumber;
+    if (Array.isArray(o.flightNumbers) && o.flightNumbers.length) return o.flightNumbers.join(", ");
+    var out = [];
+    for (var i = 0; i < segs.length; i++) {
+      var s = segs[i];
+      var no = s.flightNumber || ((s.carrierCode || "") + (s.number || ""));
+      if (no) out.push(no);
+    }
+    return out.join(", ");
+  }
+
+  function getTotalPrice(o) {
+    return ((o.price && (o.price.total ?? o.price.grandTotal ?? o.price.base)) ?? o.total ?? o.amount ?? o.priceTotal ?? null);
+  }
+
+  function getCurrency(o) {
+    return (o.price && o.price.currency) || o.currency || "EUR";
+  }
+
+  function computeMetrics(o) {
+    var segs = getSegments(o);
+    var stops = typeof o.stops === "number" ? o.stops : Math.max(0, segs.length - 1);
+    var dep = o.departAt || o.departureAt || o.departTime || (segs[0] && ((segs[0].departure && segs[0].departure.at) || segs[0].departAt));
+    var arr = o.arriveAt || o.arrivalAt || o.arriveTime || (segs[segs.length - 1] && ((segs[segs.length - 1].arrival && segs[segs.length - 1].arrival.at) || segs[segs.length - 1].arriveAt));
+    return { stops: stops, dep: dep, arr: arr };
+  }
+
+  function render() {
+    var list = document.getElementById("list");
+    var empty = document.getElementById("empty");
+    list.innerHTML = "";
+
+    var items = state.rawOffers.slice();
+
+    if (state.stopsFilter !== "any") {
+      var maxStops = Number(state.stopsFilter);
+      items = items.filter(function(o) { return computeMetrics(o).stops <= maxStops; });
+    }
+
+    if (state.sortBy === "cheapest") {
+      items.sort(function(a, b) { return Number(getTotalPrice(a) || 1e12) - Number(getTotalPrice(b) || 1e12); });
+    } else {
+      items.sort(function(a, b) { return Number(a.durationMinutes || 1e12) - Number(b.durationMinutes || 1e12); });
+    }
+
+    state.visibleOffers = items;
+    document.getElementById("summary").textContent = items.length + " results";
+
+    if (!items.length) {
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+
+    items.forEach(function(o, idx) {
+      var segs = getSegments(o);
+      var m = computeMetrics(o);
+      var from = getFromCode(o, segs);
+      var to = getToCode(o, segs);
+      var airline = getAirline(o, segs);
+      var flightNumbers = getFlightNumbers(o, segs);
+      var totalPrice = getTotalPrice(o);
+      var currency = getCurrency(o);
+      var duration = o.durationText || formatDuration(o.durationMinutes) || formatDuration(o.duration) || "";
+      var vias = [];
+      if (segs.length > 1) {
+        for (var j = 0; j < segs.length - 1; j++) {
+          var viaCode = segs[j].toCode || segs[j].to || (segs[j].arrival && segs[j].arrival.iataCode) || "";
+          if (viaCode) vias.push(viaCode);
+        }
+      }
+
+      var el = document.createElement("div");
+      el.className = "offer";
+      el.innerHTML =
+        '<div>' +
+          '<div class="airline-row">' +
+            '<div class="logo">' + escapeHtml(logoText(airline)) + '</div>' +
+            '<div>' +
+              '<div class="airline-name">' + escapeHtml(airline) + '</div>' +
+              '<div class="flight-no">Flight: ' + escapeHtml(flightNumbers || "—") + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="route-main">' +
+            '<div class="time-block"><b>' + fmtTime(m.dep) + '</b><span>' + escapeHtml(from) + '</span></div>' +
+            '<div class="route-line"><div class="line"></div><div class="mid">' + escapeHtml(duration || "") + ' · ' + stopsText(m.stops) + '</div></div>' +
+            '<div class="time-block"><b>' + fmtTime(m.arr) + '</b><span>' + escapeHtml(to) + '</span></div>' +
+          '</div>' +
+          '<div class="meta">' +
+            '<span class="tag">' + escapeHtml(o.travelClass || "ECONOMY") + '</span>' +
+            '<span class="tag">' + escapeHtml(stopsText(m.stops)) + '</span>' +
+            (vias.length ? ('<span class="tag">via ' + escapeHtml(vias.join(", ")) + '</span>') : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="middle-col">' +
+          '<div class="row"><b>Route</b>: ' + escapeHtml(from) + ' → ' + escapeHtml(to) + '</div>' +
+          '<div class="row"><b>Departure</b>: ' + fmtTime(m.dep) + '</div>' +
+          '<div class="row"><b>Arrival</b>: ' + fmtTime(m.arr) + '</div>' +
+          '<div class="row"><b>Flight No.</b>: ' + escapeHtml(flightNumbers || "—") + '</div>' +
+        '</div>' +
+        '<div class="price-col">' +
+          '<div class="label">Total price</div>' +
+          '<div class="amount">' + escapeHtml(money(currency, totalPrice)) + '</div>' +
+          '<div class="hint">' + escapeHtml(duration || "") + '</div>' +
+          '<button data-id="' + escapeHtml(String(o.id || idx)) + '">Select</button>' +
+        '</div>';
+      list.appendChild(el);
+    });
+  }
+
+  function setError(msg) {
+    var e = document.getElementById("error");
+    e.style.display = "block";
+    e.textContent = msg;
+    document.getElementById("list").innerHTML = "";
+    document.getElementById("empty").style.display = "none";
+  }
+
+  function clearError() {
+    var e = document.getElementById("error");
+    e.style.display = "none";
+    e.textContent = "";
+  }
+
+  async function resolveIata(value) {
+    var v = (value || "").trim();
+    if (!v) throw new Error("Empty city / airport");
+    if (/^[A-Z]{3}$/i.test(v)) return v.toUpperCase();
+
+    var res = await fetch("/api/locations/search?keyword=" + encodeURIComponent(v));
+    var data = await res.json();
+
+    if (!res.ok) throw new Error((data && data.error) ? data.error : "Location resolve failed");
+    if (Array.isArray(data) && data.length > 0 && data[0].iataCode) return String(data[0].iataCode).toUpperCase();
+
+    throw new Error("Could not resolve location: " + v);
+  }
+
+  function buildSuggestButton(item, inputEl, suggestBox) {
+    var btn = document.createElement("button");
+    var title = (item.name || item.city || "Unknown") + " (" + (item.iataCode || "—") + ")";
+    var sub = [item.type, item.city, item.country].filter(Boolean).join(" · ");
+    btn.innerHTML = '<div class="s1">' + escapeHtml(title) + '</div>' + (sub ? ('<div class="s2">' + escapeHtml(sub) + '</div>') : '');
+    btn.onclick = function() {
+      inputEl.value = item.iataCode || "";
+      suggestBox.style.display = "none";
+    };
+    return btn;
+  }
+
+  function attachSuggest(inputEl, suggestBox) {
+    var timeout;
+    inputEl.addEventListener("input", function() {
+      clearTimeout(timeout);
+      var q = (inputEl.value || "").trim();
+      if (q.length < 2) { suggestBox.style.display = "none"; return; }
+
+      timeout = setTimeout(function() {
+        fetch("/api/locations/search?keyword=" + encodeURIComponent(q))
+          .then(function(r){ return r.json().then(function(data){ return { ok:r.ok, data:data }; }); })
+          .then(function(result){
+            if (!result.ok || !Array.isArray(result.data) || result.data.length === 0) {
+              suggestBox.style.display = "none";
+              return;
+            }
+            suggestBox.innerHTML = "";
+            result.data.forEach(function(item){ suggestBox.appendChild(buildSuggestButton(item, inputEl, suggestBox)); });
+            suggestBox.style.display = "block";
+          })
+          .catch(function(){ suggestBox.style.display = "none"; });
+      }, 250);
+    });
+
+    inputEl.addEventListener("blur", function(){ setTimeout(function(){ suggestBox.style.display = "none"; }, 180); });
+  }
+
+  async function doSearch() {
+    var originRaw = (originEl.value || "").trim();
+    var destRaw = (destEl.value || "").trim();
+    var date = departEl.value;
+
+    if (!originRaw || !destRaw || !date) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    clearError();
+    document.getElementById("list").innerHTML = "Loading...";
+    document.getElementById("empty").style.display = "none";
+
+    try {
+      var originCode = await resolveIata(originRaw);
+      var destCode = await resolveIata(destRaw);
+
+      originEl.value = originCode;
+      destEl.value = destCode;
+      document.getElementById("resolvedInfo").textContent = "Resolved: " + originRaw + " → " + originCode + " · " + destRaw + " → " + destCode;
+
+      var res = await fetch("/api/flights/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ origin: originCode, destination: destCode, departDate: date, adults: 1, travelClass: "ECONOMY" })
+      });
+
+      var json = await res.json();
+      if (!res.ok) throw new Error((json && json.error) ? json.error : "Search failed");
+
+      state.rawOffers = (json && json.offers) ? json.offers : [];
+      render();
+    } catch (err) {
+      setError(err && err.message ? err.message : String(err));
+    }
+  }
+
+  function bindControls() {
+    document.getElementById("stopsGroup").addEventListener("change", function(e){
+      if (e.target && e.target.name === "stops") {
+        state.stopsFilter = e.target.value;
+        render();
+      }
+    });
+
+    document.getElementById("sortBy").addEventListener("change", function(e){
+      state.sortBy = e.target.value;
+      render();
+    });
+
+    document.getElementById("runSearch").addEventListener("click", doSearch);
+    attachSuggest(originEl, originSuggest);
+    attachSuggest(destEl, destSuggest);
+  }
+
+  function bindSelect() {
+    document.getElementById("list").addEventListener("click", function(e){
+      var btn = e.target.closest("button[data-id]");
+      if (!btn) return;
+      var id = btn.getAttribute("data-id");
+      var o = state.visibleOffers.find(function(x){ return String(x.id || "") === String(id || ""); });
+      if (!o) return;
+      var segs = getSegments(o);
+      var m = computeMetrics(o);
+      alert(
+        "航司: " + getAirline(o, segs) + "\n" +
+        "航线: " + getFromCode(o, segs) + " → " + getToCode(o, segs) + "\n" +
+        "航班号: " + (getFlightNumbers(o, segs) || "—") + "\n" +
+        "时间: " + fmtTime(m.dep) + " → " + fmtTime(m.arr) + "\n" +
+        "中转: " + stopsText(m.stops) + "\n" +
+        "价格: " + money(getCurrency(o), getTotalPrice(o))
+      );
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+</script>
+</body>
+</html>
